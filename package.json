@@ -1,0 +1,22 @@
+{
+  "name": "fabrica-1155",
+  "description": "Fabrica property token",
+  "version": "1.0.0",
+  "author": "Calvin Pak <calvinpak@gmail.com>",
+  "scripts": {
+    "build": "waffle",
+    "test": "NODE_ENV=test mocha",
+    "flatten": "npx waffle flatten"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@openzeppelin/contracts": "^4.6.0",
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "chai": "^4.3.7",
+    "ethereum-waffle": "^3.4.4",
+    "mocha": "^10.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.3"
+  }
+}
