@@ -4,7 +4,10 @@
 pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+
 
 /**
  * @dev Implementation of the Fabrica ERC1155 multi-token.
@@ -13,7 +16,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
  *
  * _Available since v3.1._
  */
-contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
+contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable, Pausable {
     using Address for address;
 
     // Struct needed to avoid stack too deep error
@@ -34,24 +37,52 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
     // Mapping from token ID to property info
     mapping(uint256 => Property) private _property;
 
-    // For Opensea compatibility, `id` needs to convert to string, store base uri to construct the public uri
-    // Default: `https://metadata.fabrtica.land/[chain_id]/[contract_address]/{id}.json`
-    string private _baseUri = string(abi.encodePacked(
-        "https://metadata.fabrica.land/",
-        Strings.toString(block.chainid),
-        "/",
-        Strings.toHexString(address(this)),
-        "/"
-    ));
+    // Mapping from chainID to chain name
+    mapping(uint256 => string) public _networkName;
+
+
     // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
-    string private _uri = string.concat(_baseUri, "{id}.json");
+    string private _baseUri;
+    string private _uri;
 
     event Creation(string uri);
+    event NetworkNameUpdated(uint256 chainId, string networkName);
 
     /**
      * @dev See {_setURI}.
      */
     constructor() {
+        setNetworkName(1, "ethereum");
+        setNetworkName(5, "goerli");
+        setNetworkName(10, "optimism");
+        setNetworkName(137, "polygon");
+
+        // For Opensea compatibility, `id` needs to convert to string, store base uri to construct the public uri
+        // Default: `https://metadata.fabrtica.land/[chain_id]/[contract_address]/{id}.json`
+        uint256 _chainId = block.chainid;
+        string memory networkName;
+        if (_chainId == 1) {
+            networkName = "ethereum";
+        } else if (_chainId == 5) {
+            networkName = "goerli";
+        } else if (_chainId == 10) {
+            networkName = "optimism";
+        } else if (_chainId == 137) {
+            networkName = "polygon";
+        } else {
+            networkName = Strings.toString(_chainId);
+        }
+
+        string memory baseUri = string.concat(
+            "https://metadata.fabrica.land/",
+            networkName,
+            "/",
+            Strings.toHexString(address(this)),
+            "/"
+        );
+        _baseUri = baseUri;
+        _uri = string.concat(baseUri, "{id}.json");
+
         emit Creation(_uri);
     }
 
@@ -63,6 +94,14 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
             interfaceId == type(IERC1155).interfaceId ||
             interfaceId == type(IERC1155MetadataURI).interfaceId ||
             super.supportsInterface(interfaceId);
+    }
+
+    function pause() public onlyOwner whenNotPaused {
+        _pause();
+    }
+
+    function unpause() public onlyOwner whenPaused {
+        _unpause();
     }
 
     /**
@@ -91,13 +130,13 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
      * @dev `mint` does not minting to a 3rd party address
      */
     function mint(
-        uint256 sessionId,
+        uint sessionId,
         uint256 supply,
         string memory definition,
         string memory operatingAgreement,
         string memory configuration,
         address validator
-    ) public returns (uint256) {
+    ) public whenNotPaused returns (uint256) {
         Property memory property;
         property.supply = supply;
         property.operatingAgreement = operatingAgreement;
@@ -106,6 +145,29 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
         property.validator = validator;
         uint256 id = _mint(_msgSender(), sessionId, property, "");
         return id;
+    }
+
+    /**
+     * @dev set network name for chainId
+     */
+    function setNetworkName(uint256 chainId, string memory networkName) public onlyOwner {
+        _networkName[chainId] = networkName;
+        emit NetworkNameUpdated(chainId, networkName);
+    }
+
+    /**
+     * @dev generate token id (to avoid frontrunning)
+     */
+    function generateId(address operator, uint256 sessionId) public view whenNotPaused returns(uint256) {
+        /**
+         * @dev hash operator address with sessionId and chainId to generate unique token Id
+         *      format: string(sender_address) + string(sessionId) => hash to byte32 => cast to uint
+         */
+        string memory operatorString = Strings.toHexString(uint(uint160(operator)), 20);
+        string memory idString = string.concat(Strings.toString(block.chainid), operatorString, Strings.toString(sessionId));
+        uint256 bigId = uint256(keccak256(abi.encodePacked(idString)));
+        uint64 smallId = uint64(bigId);
+        return uint256(smallId);
     }
 
     /**
@@ -148,14 +210,14 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
     /**
      * @dev See {IERC1155-setApprovalForAll}.
      */
-    function setApprovalForAll(address operator, bool approved) public virtual override {
+    function setApprovalForAll(address operator, bool approved) public virtual override whenNotPaused {
         _setApprovalForAll(_msgSender(), operator, approved);
     }
 
     /**
      * @dev See {IERC1155-isApprovedForAll}.
      */
-    function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {
+    function isApprovedForAll(address account, address operator) public view virtual override whenNotPaused returns (bool) {
         return _operatorApprovals[account][operator];
     }
 
@@ -168,7 +230,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) public virtual override {
+    ) public virtual override whenNotPaused {
         require(
             from == _msgSender() || isApprovedForAll(from, _msgSender()),
             "ERC1155: caller is not token owner or approved"
@@ -185,7 +247,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) public virtual override {
+    ) public virtual override whenNotPaused {
         require(
             from == _msgSender() || isApprovedForAll(from, _msgSender()),
             "ERC1155: caller is not token owner or approved"
@@ -194,7 +256,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
     }
 
     // @dev only executable by > 70% owner
-    function updateOperatingAgreement(string memory operatingAgreement, uint256 id) public returns (bool) {
+    function updateOperatingAgreement(string memory operatingAgreement, uint256 id) public whenNotPaused returns (bool) {
         require(_percentOwner(_msgSender(), id, 70), "Only > 70% can update");
         _property[id].operatingAgreement = operatingAgreement;
         // TODO: emit event
@@ -202,7 +264,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
     }
 
     // @dev only executable by > 50% owner
-    function updateConfiguration(string memory configuration, uint256 id) public returns (bool) {
+    function updateConfiguration(string memory configuration, uint256 id) public whenNotPaused returns (bool) {
         require(_percentOwner(_msgSender(), id, 50), "Only > 50% can update");
         _property[id].configuration = configuration;
         // TODO: emit event
@@ -210,7 +272,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
     }
 
     // @dev only executable by > 70% owner
-    function updateValidator(address validator, uint256 id) public returns (bool) {
+    function updateValidator(address validator, uint256 id) public whenNotPaused returns (bool) {
         require(_percentOwner(_msgSender(), id, 70), "Only > 70% can update");
         _property[id].validator = validator;
         // TODO: emit event
@@ -249,7 +311,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) internal virtual {
+    ) internal virtual whenNotPaused {
         require(to != address(0), "ERC1155: transfer to the zero address");
 
         address operator = _msgSender();
@@ -288,7 +350,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) internal virtual {
+    ) internal virtual whenNotPaused {
         require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
         require(to != address(0), "ERC1155: transfer to the zero address");
 
@@ -334,8 +396,12 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
      * Because these URIs cannot be meaningfully represented by the {URI} event,
      * this function emits no events.
      */
-    function _setURI(string memory baseUri) internal virtual {
+    function _setURI(string memory baseUri) internal virtual whenNotPaused {
         _uri = string.concat(baseUri, "{id}.json");
+    }
+
+    function _setBaseUri(string memory baseUri) internal virtual whenNotPaused {
+        _baseUri = baseUri;
     }
 
     /**
@@ -355,7 +421,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint sessionId,
         Property memory property,
         bytes memory data
-    ) internal virtual returns(uint256) {
+    ) internal virtual whenNotPaused returns(uint256) {
         // Note: `to` is default to the message sender, this validation should never fail
         require(to != address(0), "ERC1155: mint to the zero address");
         require(bytes(property.definition).length > 0, "Definition is required");
@@ -366,13 +432,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
 
         uint256 amount = property.supply;
 
-        /**
-         * @dev hash sender address with sessionId to generate unique token Id
-         *      format: string(sender_address) + string(sessionId) => hash to byte32 => cast to uint
-         */
-        string memory operatorString = Strings.toHexString(uint(uint160(operator)), 20);
-        string memory idString = string.concat(operatorString, Strings.toString(sessionId));
-        uint256 id = uint(keccak256(abi.encodePacked(idString)));
+        uint256 id = generateId(operator, sessionId);
 
         require(_property[id].supply == 0, "Session ID already exist, please use a different one");
 
@@ -409,7 +469,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
     //     uint256[] memory ids,
     //     uint256[] memory amounts,
     //     bytes memory data
-    // ) internal virtual {
+    // ) internal virtual whenNotPaused {
     //     require(to != address(0), "ERC1155: mint to the zero address");
     //     require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
 
@@ -442,7 +502,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
     //     address from,
     //     uint256 id,
     //     uint256 amount
-    // ) internal virtual {
+    // ) internal virtual whenNotPaused {
     //     require(from != address(0), "ERC1155: burn from the zero address");
 
     //     address operator = _msgSender();
@@ -475,7 +535,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
     //     address from,
     //     uint256[] memory ids,
     //     uint256[] memory amounts
-    // ) internal virtual {
+    // ) internal virtual whenNotPaused {
     //     require(from != address(0), "ERC1155: burn from the zero address");
     //     require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
 
@@ -508,7 +568,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
         address owner,
         address operator,
         bool approved
-    ) internal virtual {
+    ) internal virtual whenNotPaused {
         require(owner != operator, "ERC1155: setting approval status for self");
         _operatorApprovals[owner][operator] = approved;
         emit ApprovalForAll(owner, operator, approved);
@@ -541,7 +601,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) internal virtual {}
+    ) internal virtual whenNotPaused {}
 
     /**
      * @dev Hook that is called after any token transfer. This includes minting
@@ -570,7 +630,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) internal virtual {}
+    ) internal virtual whenNotPaused {}
 
     function _doSafeTransferAcceptanceCheck(
         address operator,
@@ -579,7 +639,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) private {
+    ) private whenNotPaused {
         if (to.isContract()) {
             try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
                 if (response != IERC1155Receiver.onERC1155Received.selector) {
@@ -600,7 +660,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) private {
+    ) private whenNotPaused {
         if (to.isContract()) {
             try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
                 bytes4 response
