@@ -6,7 +6,7 @@
 
 `yarn test`
 
-## Deplyment
+## Deployment
 
 Copy the `custom_flatten/FabricaToken1155.sol` file to [remix](https://remix.ethereum.org/) and deploy with Metamask.
 
