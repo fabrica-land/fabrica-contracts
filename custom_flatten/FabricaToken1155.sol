@@ -1722,53 +1722,17 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     // Mapping from token ID to property info
     mapping(uint256 => Property) private _property;
 
-    // Mapping from chainID to chain name
-    mapping(uint256 => string) public _networkName;
+    string public _networkName;
 
-
-    // Used as the URI for all token types by relying on ID substitution, e.g. https://token-cdn-domain/{id}.json
-    string private _baseUri;
-    string private _uri;
-
-    event Creation(string uri);
-    event NetworkNameUpdated(uint256 chainId, string networkName);
+    // Data update
+    event UpdateData(uint256 tokenId, string dataType, string newData);
+    event UpdateValidator(uint256 tokenId, string dataType, address validator);
 
     /**
-     * @dev See {_setURI}.
+     * @dev networkName is required for launching the smart contract. E.g. goerli, ethereum (for mainnet)
      */
-    constructor() {
-        setNetworkName(1, "ethereum");
-        setNetworkName(5, "goerli");
-        setNetworkName(10, "optimism");
-        setNetworkName(137, "polygon");
-
-        // For Opensea compatibility, `id` needs to convert to string, store base uri to construct the public uri
-        // Default: `https://metadata.fabrtica.land/[chain_id]/[contract_address]/{id}.json`
-        uint256 _chainId = block.chainid;
-        string memory networkName;
-        if (_chainId == 1) {
-            networkName = "ethereum";
-        } else if (_chainId == 5) {
-            networkName = "goerli";
-        } else if (_chainId == 10) {
-            networkName = "optimism";
-        } else if (_chainId == 137) {
-            networkName = "polygon";
-        } else {
-            networkName = Strings.toString(_chainId);
-        }
-
-        string memory baseUri = string.concat(
-            "https://metadata.fabrica.land/",
-            networkName,
-            "/",
-            Strings.toHexString(address(this)),
-            "/"
-        );
-        _baseUri = baseUri;
-        _uri = string.concat(baseUri, "{id}.json");
-
-        emit Creation(_uri);
+    constructor(string memory networkName) {
+        _networkName = networkName;
     }
 
     /**
@@ -1803,19 +1767,24 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      */
     function uri(uint256 id) override public view returns (string memory) {
         return(
-            string(abi.encodePacked(
-                _baseUri,
+            string.concat(
+                "https://metadata.fabrica.land/",
+                _networkName,
+                "/",
+                Strings.toHexString(address(this)),
+                "/",
                 Strings.toString(id),
                 ".json"
-            ))
+            )
         );
     }
 
     /**
-     * @dev `mint` does not minting to a 3rd party address
+     * @dev `mint` allows users to mint to 3rd party (although it allows to mint to self as well)
      */
     function mint(
-        uint sessionId,
+        address to,
+        uint256 sessionId,
         uint256 supply,
         string memory definition,
         string memory operatingAgreement,
@@ -1828,16 +1797,32 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         property.definition = definition;
         property.configuration = configuration;
         property.validator = validator;
-        uint256 id = _mint(_msgSender(), sessionId, property, "");
+        uint256 id = _mint(to, sessionId, property, "");
         return id;
     }
 
     /**
-     * @dev set network name for chainId
+     * @dev `mintBatch` allows users to mint in bulk
      */
-    function setNetworkName(uint256 chainId, string memory networkName) public onlyOwner {
-        _networkName[chainId] = networkName;
-        emit NetworkNameUpdated(chainId, networkName);
+    function mintBatch(
+        address to,
+        uint256[] memory sessionIds,
+        uint256[] memory supplies,
+        string[] memory definitions,
+        string[] memory operatingAgreements,
+        string[] memory configurations,
+        address[] memory validators
+    ) public whenNotPaused returns (uint256[] memory ids) {
+        uint256 size = sessionIds.length;
+        Property[] memory properties = new Property[](size);
+        for (uint256 i = 0; i < size; i++) {
+            properties[i].supply = supplies[i];
+            properties[i].operatingAgreement = operatingAgreements[i];
+            properties[i].definition = definitions[i];
+            properties[i].configuration = configurations[i];
+            properties[i].validator = validators[i];
+        }
+        ids = _mintBatch(to, sessionIds, properties, "");
     }
 
     /**
@@ -1944,7 +1929,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     function updateOperatingAgreement(string memory operatingAgreement, uint256 id) public whenNotPaused returns (bool) {
         require(_percentOwner(_msgSender(), id, 70), "Only > 70% can update");
         _property[id].operatingAgreement = operatingAgreement;
-        // TODO: emit event
+        emit UpdateData(id, "operatingAgreement", operatingAgreement);
         return true;
     }
 
@@ -1952,7 +1937,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     function updateConfiguration(string memory configuration, uint256 id) public whenNotPaused returns (bool) {
         require(_percentOwner(_msgSender(), id, 50), "Only > 50% can update");
         _property[id].configuration = configuration;
-        // TODO: emit event
+        emit UpdateData(id, "configuration", configuration);
         return true;
     }
 
@@ -1960,7 +1945,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     function updateValidator(address validator, uint256 id) public whenNotPaused returns (bool) {
         require(_percentOwner(_msgSender(), id, 70), "Only > 70% can update");
         _property[id].validator = validator;
-        // TODO: emit event
+        emit UpdateValidator(id, "validator", validator);
         return true;
     }
 
@@ -2063,33 +2048,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     }
 
     /**
-     * @dev Sets a new URI for all token types, by relying on the token type ID
-     * substitution mechanism
-     * https://eips.ethereum.org/EIPS/eip-1155#metadata[defined in the EIP].
-     *
-     * By this mechanism, any occurrence of the `\{id\}` substring in either the
-     * URI or any of the amounts in the JSON file at said URI will be replaced by
-     * clients with the token type ID.
-     *
-     * For example, the `https://token-cdn-domain/\{id\}.json` URI would be
-     * interpreted by clients as
-     * `https://token-cdn-domain/000000000000000000000000000000000000000000000000000000000004cce0.json`
-     * for token type ID 0x4cce0.
-     *
-     * See {uri}.
-     *
-     * Because these URIs cannot be meaningfully represented by the {URI} event,
-     * this function emits no events.
-     */
-    function _setURI(string memory baseUri) internal virtual whenNotPaused {
-        _uri = string.concat(baseUri, "{id}.json");
-    }
-
-    function _setBaseUri(string memory baseUri) internal virtual whenNotPaused {
-        _baseUri = baseUri;
-    }
-
-    /**
      * @dev Creates `amount` tokens of token type `id`, and assigns them to `to`.
      *
      * Emits a {TransferSingle} event.
@@ -2107,7 +2065,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         Property memory property,
         bytes memory data
     ) internal virtual whenNotPaused returns(uint256) {
-        // Note: `to` is default to the message sender, this validation should never fail
         require(to != address(0), "ERC1155: mint to the zero address");
         require(bytes(property.definition).length > 0, "Definition is required");
         require(sessionId > 0, "Valid sessionId is required");
@@ -2149,100 +2106,46 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155BatchReceived} and return the
      * acceptance magic value.
      */
-    // function _mintBatch(
-    //     address to,
-    //     uint256[] memory ids,
-    //     uint256[] memory amounts,
-    //     bytes memory data
-    // ) internal virtual whenNotPaused {
-    //     require(to != address(0), "ERC1155: mint to the zero address");
-    //     require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+    function _mintBatch(
+        address to,
+        uint256[] memory sessionIds,
+        Property[] memory properties,
+        bytes memory data
+    ) internal virtual whenNotPaused returns(uint256[] memory) {
+        require(to != address(0), "ERC1155: mint to the zero address");
+        require(sessionIds.length == properties.length, "sessionIds and properties length mismatch");
 
-    //     address operator = _msgSender();
+        uint256 size = sessionIds.length;
+        address operator = _msgSender();
+        uint256[] memory ids = new uint256[](size);
+        uint256[] memory amounts = new uint256[](size);
 
-    //     _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
+        // _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
 
-    //     for (uint256 i = 0; i < ids.length; i++) {
-    //         _balances[ids[i]][to] += amounts[i];
-    //     }
+        for (uint256 i = 0; i < size; i++) {
+            require(bytes(properties[i].definition).length > 0, "Definition is required");
+            require(sessionIds[i] > 0, "Valid sessionId is required");
+            require(properties[i].supply > 0, "Minimum supply is 1");
 
-    //     emit TransferBatch(operator, address(0), to, ids, amounts);
+            uint256 id = generateId(operator, sessionIds[i]);
+            require(_property[id].supply == 0, "Session ID already exist, please use a different one");
+            uint256 amount = properties[i].supply;
 
-    //     _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
+            ids[i] = id;
+            amounts[i] = amount;
 
-    //     _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
-    // }
+            _balances[id][to] += amount;
+            // Update property data
+            _property[id] = properties[i];
+        }
 
-    /**
-     * @dev Destroys `amount` tokens of token type `id` from `from`
-     *
-     * Emits a {TransferSingle} event.
-     *
-     * Requirements:
-     *
-     * - `from` cannot be the zero address.
-     * - `from` must have at least `amount` tokens of token type `id`.
-     */
-    // function _burn(
-    //     address from,
-    //     uint256 id,
-    //     uint256 amount
-    // ) internal virtual whenNotPaused {
-    //     require(from != address(0), "ERC1155: burn from the zero address");
+        emit TransferBatch(operator, address(0), to, ids, amounts);
 
-    //     address operator = _msgSender();
-    //     uint256[] memory ids = _asSingletonArray(id);
-    //     uint256[] memory amounts = _asSingletonArray(amount);
+        // _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
 
-    //     _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
-
-    //     uint256 fromBalance = _balances[id][from];
-    //     require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
-    //     unchecked {
-    //         _balances[id][from] = fromBalance - amount;
-    //     }
-
-    //     emit TransferSingle(operator, from, address(0), id, amount);
-
-    //     _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
-    // }
-
-    /**
-     * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {_burn}.
-     *
-     * Emits a {TransferBatch} event.
-     *
-     * Requirements:
-     *
-     * - `ids` and `amounts` must have the same length.
-     */
-    // function _burnBatch(
-    //     address from,
-    //     uint256[] memory ids,
-    //     uint256[] memory amounts
-    // ) internal virtual whenNotPaused {
-    //     require(from != address(0), "ERC1155: burn from the zero address");
-    //     require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
-
-    //     address operator = _msgSender();
-
-    //     _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
-
-    //     for (uint256 i = 0; i < ids.length; i++) {
-    //         uint256 id = ids[i];
-    //         uint256 amount = amounts[i];
-
-    //         uint256 fromBalance = _balances[id][from];
-    //         require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
-    //         unchecked {
-    //             _balances[id][from] = fromBalance - amount;
-    //         }
-    //     }
-
-    //     emit TransferBatch(operator, from, address(0), ids, amounts);
-
-    //     _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
-    // }
+        _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
+        return ids;
+    }
 
     /**
      * @dev Approve `operator` to operate on all of `owner` tokens
