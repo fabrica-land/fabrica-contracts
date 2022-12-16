@@ -1720,19 +1720,22 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
     // Mapping from token ID to property info
-    mapping(uint256 => Property) private _property;
+    mapping(uint256 => Property) public _property;
 
-    string public _networkName;
+    string private _baseMetadataUri;
 
-    // Data update
-    event UpdateData(uint256 tokenId, string dataType, string newData);
+    // On-chain data update
+    event UpdateConfiguration(uint256, string newData);
+    event UpdateOperatingAgreement(uint256, string newData);
     event UpdateValidator(uint256 tokenId, string dataType, address validator);
 
     /**
      * @dev networkName is required for launching the smart contract. E.g. goerli, ethereum (for mainnet)
      */
-    constructor(string memory networkName) {
-        _networkName = networkName;
+    constructor(string memory baseMetadataUri) {
+        // E.g. Testnet: baseMetadataUri = "https://metadata-goerli.fabrica.land/goerli/"
+        // Main net: "https://metadata.fabrica.land/ethereum/"
+        _baseMetadataUri = baseMetadataUri;
     }
 
     /**
@@ -1764,17 +1767,16 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      * actual token type ID.
      *
      * function uri(uint256) public view virtual override returns (string memory) {return _uri;}
+     *
+     * Fabrica: use network name subdomain and contract address + tokenId, no suffix '.json'
      */
     function uri(uint256 id) override public view returns (string memory) {
         return(
             string.concat(
-                "https://metadata.fabrica.land/",
-                _networkName,
-                "/",
+                _baseMetadataUri,
                 Strings.toHexString(address(this)),
                 "/",
-                Strings.toString(id),
-                ".json"
+                Strings.toString(id)
             )
         );
     }
@@ -1929,7 +1931,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     function updateOperatingAgreement(string memory operatingAgreement, uint256 id) public whenNotPaused returns (bool) {
         require(_percentOwner(_msgSender(), id, 70), "Only > 70% can update");
         _property[id].operatingAgreement = operatingAgreement;
-        emit UpdateData(id, "operatingAgreement", operatingAgreement);
+        emit UpdateOperatingAgreement(id, operatingAgreement);
         return true;
     }
 
@@ -1937,7 +1939,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     function updateConfiguration(string memory configuration, uint256 id) public whenNotPaused returns (bool) {
         require(_percentOwner(_msgSender(), id, 50), "Only > 50% can update");
         _property[id].configuration = configuration;
-        emit UpdateData(id, "configuration", configuration);
+        emit UpdateConfiguration(id, configuration);
         return true;
     }
 
