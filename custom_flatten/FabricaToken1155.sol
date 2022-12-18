@@ -1733,7 +1733,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      * @dev networkName is required for launching the smart contract. E.g. goerli, ethereum (for mainnet)
      */
     constructor(string memory baseMetadataUri) {
-        // E.g. Testnet: baseMetadataUri = "https://metadata-goerli.fabrica.land/goerli/"
+        // E.g. Testnet: baseMetadataUri = "https://metadata-staging.fabrica.land/goerli/"
         // Main net: "https://metadata.fabrica.land/ethereum/"
         _baseMetadataUri = baseMetadataUri;
     }
