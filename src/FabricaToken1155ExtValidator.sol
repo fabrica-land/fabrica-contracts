@@ -7,7 +7,9 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import "./IFabricaValidator.sol";
 
 /**
  * @dev Implementation of the Fabrica ERC1155 multi-token.
@@ -37,21 +39,15 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     // Mapping from token ID to property info
     mapping(uint256 => Property) public _property;
 
-    string private _baseMetadataUri;
+    // default validator
+    // Goerli address:
+    // MainNet address:
+    address public _validator = 0xE57CC4B20459Fd1d759e73851A1b998d571525CC;
 
     // On-chain data update
     event UpdateConfiguration(uint256, string newData);
     event UpdateOperatingAgreement(uint256, string newData);
     event UpdateValidator(uint256 tokenId, string dataType, address validator);
-
-    /**
-     * @dev networkName is required for launching the smart contract. E.g. goerli, ethereum (for mainnet)
-     */
-    constructor(string memory baseMetadataUri) {
-        // E.g. Testnet: baseMetadataUri = "https://metadata-staging.fabrica.land/goerli/"
-        // Main net: "https://metadata.fabrica.land/ethereum/"
-        _baseMetadataUri = baseMetadataUri;
-    }
 
     /**
      * @dev See {IERC165-supportsInterface}.
@@ -84,16 +80,19 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      * function uri(uint256) public view virtual override returns (string memory) {return _uri;}
      *
      * Fabrica: use network name subdomain and contract address + tokenId, no suffix '.json'
+     *
+     *`delegatecall` is most gas efficient, `call` can be used, too, to 
+     * call validator. But this `uri` function is a `view` contract by 1155
+     * spec, and both `delegatecall` or `call` can potentially change state,
+     * need to change the `view` to `nonpayable` which does not conform to 
+     * standard. Therefore, it is safer to use Interface to load the validator
+     * methods.
+     *
      */
     function uri(uint256 id) override public view returns (string memory) {
-        return(
-            string.concat(
-                _baseMetadataUri,
-                Strings.toHexString(address(this)),
-                "/",
-                Strings.toString(id)
-            )
-        );
+        // Validator is an optional param during mint, but it will get the default value
+        // in the _mint function so it will NEVER be null
+        return IValidator(_property[id].validator).uri(id);
     }
 
     /**
@@ -140,6 +139,24 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
             properties[i].validator = validators[i];
         }
         ids = _mintBatch(to, sessionIds, properties, "");
+    }
+
+    function burn(
+        address from,
+        uint256 id,
+        uint256 amount
+    ) public whenNotPaused returns (bool success) {
+        _burn(from, id, amount);
+        success = true;
+    }
+
+    function burnBatch(
+        address from,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) public whenNotPaused returns (bool success) {
+        _burnBatch(from, ids, amounts);
+        success = true;
     }
 
     /**
@@ -387,28 +404,31 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         require(sessionId > 0, "Valid sessionId is required");
         require(property.supply > 0, "Minimum supply is 1");
 
-        address operator = _msgSender();
 
+        // If validator is not specified during mint, use default validator address
+        if (property.validator == address(0)) {
+            property.validator = _validator;
+        }
         uint256 amount = property.supply;
 
-        uint256 id = generateId(operator, sessionId);
+        uint256 id = generateId(_msgSender(), sessionId);
 
         require(_property[id].supply == 0, "Session ID already exist, please use a different one");
 
         // uint256[] memory ids = _asSingletonArray(id);
         // uint256[] memory amounts = _asSingletonArray(amount);
 
-        // _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
+        // _beforeTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
 
         _balances[id][to] += amount;
         // Update property data
         _property[id] = property;
 
-        emit TransferSingle(operator, address(0), to, id, amount);
+        emit TransferSingle(_msgSender(), address(0), to, id, amount);
 
-        // _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
+        // _afterTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
 
-        _doSafeTransferAcceptanceCheck(operator, address(0), to, id, amount, data);
+        _doSafeTransferAcceptanceCheck(_msgSender(), address(0), to, id, amount, data);
         return id;
     }
 
@@ -432,19 +452,19 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         require(to != address(0), "ERC1155: mint to the zero address");
         require(sessionIds.length == properties.length, "sessionIds and properties length mismatch");
 
-        uint256 size = sessionIds.length;
-        address operator = _msgSender();
-        uint256[] memory ids = new uint256[](size);
-        uint256[] memory amounts = new uint256[](size);
+        // hit stack too deep error when using more variables, so we use sessionsIds.length in multiple
+        // places instead of creating new variables
+        uint256[] memory ids = new uint256[](sessionIds.length);
+        uint256[] memory amounts = new uint256[](sessionIds.length);
 
-        // _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
+        // _beforeTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
 
-        for (uint256 i = 0; i < size; i++) {
+        for (uint256 i = 0; i < sessionIds.length; i++) {
             require(bytes(properties[i].definition).length > 0, "Definition is required");
             require(sessionIds[i] > 0, "Valid sessionId is required");
             require(properties[i].supply > 0, "Minimum supply is 1");
 
-            uint256 id = generateId(operator, sessionIds[i]);
+            uint256 id = generateId(_msgSender(), sessionIds[i]);
             require(_property[id].supply == 0, "Session ID already exist, please use a different one");
             uint256 amount = properties[i].supply;
 
@@ -456,11 +476,11 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
             _property[id] = properties[i];
         }
 
-        emit TransferBatch(operator, address(0), to, ids, amounts);
+        emit TransferBatch(_msgSender(), address(0), to, ids, amounts);
 
-        // _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
+        // _afterTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
 
-        _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
+        _doSafeBatchTransferAcceptanceCheck(_msgSender(), address(0), to, ids, amounts, data);
         return ids;
     }
 
