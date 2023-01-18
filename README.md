@@ -14,6 +14,7 @@
 
 - Fabrica Proxy: 0x2E1feB1efecbadD1aED541eCd251656c23842ec2
 
+- Testnet Validator Proxy: 0xfCea282244e184D5E8B1920F91446FC75AEA8Cd2
 
 - Testnet Validator: 0xE57CC4B20459Fd1d759e73851A1b998d571525CC (returns testnet metadata link)
 
