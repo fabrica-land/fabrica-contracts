@@ -3,10 +3,9 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MyProxy is UUPSUpgradeable, Ownable {
+contract FabricaTokenProxy is Ownable {
     address private _impl;
 
     event ImplementationChanged(address indexed proxy, address indexed implementation);
@@ -87,18 +86,4 @@ contract MyProxy is UUPSUpgradeable, Ownable {
     function _implementation() internal view virtual returns (address) {
         return _impl;
     }
-
-    function _authorizeUpgrade(address newImplementation) override internal virtual {
-        require(msg.sender == owner(), "FabricaTokenProxy: caller is not the owner");
-        _impl = newImplementation;
-        emit ImplementationChanged(address(this), newImplementation);
-    }
-
-    /**
-     * @dev Hook that is called before falling back to the implementation. Can happen as part of a manual `_fallback`
-     * call, or as part of the Solidity `fallback` or `receive` functions.
-     *
-     * If overridden should call `super._beforeFallback()`.
-     */
-    // function _beforeFallback() internal virtual {/* nothing */}
 }

@@ -39,11 +39,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     // Mapping from token ID to property info
     mapping(uint256 => Property) public _property;
 
-    // default validator
-    // Goerli address:
-    // MainNet address:
-    address public _validator = 0xE57CC4B20459Fd1d759e73851A1b998d571525CC;
-
     // On-chain data update
     event UpdateConfiguration(uint256, string newData);
     event UpdateOperatingAgreement(uint256, string newData);
@@ -90,8 +85,9 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      *
      */
     function uri(uint256 id) override public view returns (string memory) {
-        // Validator is an optional param during mint, but it will get the default value
-        // in the _mint function so it will NEVER be null
+        if (_property[id].validator == address(0)) {
+            return "";
+        }
         return IValidator(_property[id].validator).uri(id);
     }
 
@@ -162,13 +158,19 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     /**
      * @dev generate token id (to avoid frontrunning)
      */
-    function generateId(address operator, uint256 sessionId) public view whenNotPaused returns(uint256) {
+    function generateId(address operator, uint256 sessionId, string memory operatingAgreement) public view whenNotPaused returns(uint256) {
         /**
          * @dev hash operator address with sessionId and chainId to generate unique token Id
          *      format: string(sender_address) + string(sessionId) => hash to byte32 => cast to uint
          */
         string memory operatorString = Strings.toHexString(uint(uint160(operator)), 20);
-        string memory idString = string.concat(Strings.toString(block.chainid), operatorString, Strings.toString(sessionId));
+        string memory idString = string.concat(
+            Strings.toString(block.chainid),
+            Strings.toHexString(address(this)),
+            operatorString,
+            Strings.toString(sessionId),
+            operatingAgreement
+        );
         uint256 bigId = uint256(keccak256(abi.encodePacked(idString)));
         uint64 smallId = uint64(bigId);
         return uint256(smallId);
@@ -407,11 +409,12 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
 
         // If validator is not specified during mint, use default validator address
         if (property.validator == address(0)) {
-            property.validator = _validator;
+            // set default validator address
+            property.validator = 0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F;
         }
         uint256 amount = property.supply;
 
-        uint256 id = generateId(_msgSender(), sessionId);
+        uint256 id = generateId(_msgSender(), sessionId, property.operatingAgreement);
 
         require(_property[id].supply == 0, "Session ID already exist, please use a different one");
 
@@ -464,8 +467,14 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
             require(sessionIds[i] > 0, "Valid sessionId is required");
             require(properties[i].supply > 0, "Minimum supply is 1");
 
-            uint256 id = generateId(_msgSender(), sessionIds[i]);
+            uint256 id = generateId(_msgSender(), sessionIds[i], properties[i].operatingAgreement);
             require(_property[id].supply == 0, "Session ID already exist, please use a different one");
+
+            // If validator is not specified during mint, use default validator address
+            if (properties[i].validator == address(0)) {
+                // set default validator address
+                properties[i].validator = 0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F;
+            }
             uint256 amount = properties[i].supply;
 
             ids[i] = id;
