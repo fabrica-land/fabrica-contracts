@@ -1682,6 +1682,143 @@ library Strings {
 }
 
 
+// Dependency file: @openzeppelin/contracts/utils/introspection/ERC165Checker.sol
+
+// OpenZeppelin Contracts (last updated v4.8.0) (utils/introspection/ERC165Checker.sol)
+
+// pragma solidity ^0.8.0;
+
+// import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+/**
+ * @dev Library used to query support of an interface declared via {IERC165}.
+ *
+ * Note that these functions return the actual result of the query: they do not
+ * `revert` if an interface is not supported. It is up to the caller to decide
+ * what to do in these cases.
+ */
+library ERC165Checker {
+    // As per the EIP-165 spec, no interface should ever match 0xffffffff
+    bytes4 private constant _INTERFACE_ID_INVALID = 0xffffffff;
+
+    /**
+     * @dev Returns true if `account` supports the {IERC165} interface.
+     */
+    function supportsERC165(address account) internal view returns (bool) {
+        // Any contract that implements ERC165 must explicitly indicate support of
+        // InterfaceId_ERC165 and explicitly indicate non-support of InterfaceId_Invalid
+        return
+            supportsERC165InterfaceUnchecked(account, type(IERC165).interfaceId) &&
+            !supportsERC165InterfaceUnchecked(account, _INTERFACE_ID_INVALID);
+    }
+
+    /**
+     * @dev Returns true if `account` supports the interface defined by
+     * `interfaceId`. Support for {IERC165} itself is queried automatically.
+     *
+     * See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(address account, bytes4 interfaceId) internal view returns (bool) {
+        // query support of both ERC165 as per the spec and support of _interfaceId
+        return supportsERC165(account) && supportsERC165InterfaceUnchecked(account, interfaceId);
+    }
+
+    /**
+     * @dev Returns a boolean array where each value corresponds to the
+     * interfaces passed in and whether they're supported or not. This allows
+     * you to batch check interfaces for a contract where your expectation
+     * is that some interfaces may not be supported.
+     *
+     * See {IERC165-supportsInterface}.
+     *
+     * _Available since v3.4._
+     */
+    function getSupportedInterfaces(address account, bytes4[] memory interfaceIds)
+        internal
+        view
+        returns (bool[] memory)
+    {
+        // an array of booleans corresponding to interfaceIds and whether they're supported or not
+        bool[] memory interfaceIdsSupported = new bool[](interfaceIds.length);
+
+        // query support of ERC165 itself
+        if (supportsERC165(account)) {
+            // query support of each interface in interfaceIds
+            for (uint256 i = 0; i < interfaceIds.length; i++) {
+                interfaceIdsSupported[i] = supportsERC165InterfaceUnchecked(account, interfaceIds[i]);
+            }
+        }
+
+        return interfaceIdsSupported;
+    }
+
+    /**
+     * @dev Returns true if `account` supports all the interfaces defined in
+     * `interfaceIds`. Support for {IERC165} itself is queried automatically.
+     *
+     * Batch-querying can lead to gas savings by skipping repeated checks for
+     * {IERC165} support.
+     *
+     * See {IERC165-supportsInterface}.
+     */
+    function supportsAllInterfaces(address account, bytes4[] memory interfaceIds) internal view returns (bool) {
+        // query support of ERC165 itself
+        if (!supportsERC165(account)) {
+            return false;
+        }
+
+        // query support of each interface in interfaceIds
+        for (uint256 i = 0; i < interfaceIds.length; i++) {
+            if (!supportsERC165InterfaceUnchecked(account, interfaceIds[i])) {
+                return false;
+            }
+        }
+
+        // all interfaces supported
+        return true;
+    }
+
+    /**
+     * @notice Query if a contract implements an interface, does not check ERC165 support
+     * @param account The address of the contract to query for support of an interface
+     * @param interfaceId The interface identifier, as specified in ERC-165
+     * @return true if the contract at account indicates support of the interface with
+     * identifier interfaceId, false otherwise
+     * @dev Assumes that account contains a contract that supports ERC165, otherwise
+     * the behavior of this method is undefined. This precondition can be checked
+     * with {supportsERC165}.
+     * Interface identification is specified in ERC-165.
+     */
+    function supportsERC165InterfaceUnchecked(address account, bytes4 interfaceId) internal view returns (bool) {
+        // prepare call
+        bytes memory encodedParams = abi.encodeWithSelector(IERC165.supportsInterface.selector, interfaceId);
+
+        // perform static call
+        bool success;
+        uint256 returnSize;
+        uint256 returnValue;
+        assembly {
+            success := staticcall(30000, account, add(encodedParams, 0x20), mload(encodedParams), 0x00, 0x20)
+            returnSize := returndatasize()
+            returnValue := mload(0x00)
+        }
+
+        return success && returnSize >= 0x20 && returnValue > 0;
+    }
+}
+
+
+// Dependency file: src/IFabricaValidator.sol
+
+// Validator smart contract interface for Fabrica
+
+// pragma solidity ^0.8.17;
+
+interface IValidator {
+    function uri(uint256 id) external view returns (string memory);
+}
+
+
 // Root file: src/FabricaToken1155.sol
 
 // OpenZeppelin Contracts (last updated v4.8.0) (token/ERC1155/ERC1155.sol)
@@ -1692,7 +1829,9 @@ pragma solidity ^0.8.12;
 // import "@openzeppelin/contracts/security/Pausable.sol";
 // import "@openzeppelin/contracts/access/Ownable.sol";
 // import "@openzeppelin/contracts/utils/Strings.sol";
-
+// import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+// import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+// import "src/IFabricaValidator.sol";
 
 /**
  * @dev Implementation of the Fabrica ERC1155 multi-token.
@@ -1722,21 +1861,10 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     // Mapping from token ID to property info
     mapping(uint256 => Property) public _property;
 
-    string private _baseMetadataUri;
-
     // On-chain data update
     event UpdateConfiguration(uint256, string newData);
     event UpdateOperatingAgreement(uint256, string newData);
     event UpdateValidator(uint256 tokenId, string dataType, address validator);
-
-    /**
-     * @dev networkName is required for launching the smart contract. E.g. goerli, ethereum (for mainnet)
-     */
-    constructor(string memory baseMetadataUri) {
-        // E.g. Testnet: baseMetadataUri = "https://metadata-staging.fabrica.land/goerli/"
-        // Main net: "https://metadata.fabrica.land/ethereum/"
-        _baseMetadataUri = baseMetadataUri;
-    }
 
     /**
      * @dev See {IERC165-supportsInterface}.
@@ -1769,16 +1897,20 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      * function uri(uint256) public view virtual override returns (string memory) {return _uri;}
      *
      * Fabrica: use network name subdomain and contract address + tokenId, no suffix '.json'
+     *
+     *`delegatecall` is most gas efficient, `call` can be used, too, to 
+     * call validator. But this `uri` function is a `view` contract by 1155
+     * spec, and both `delegatecall` or `call` can potentially change state,
+     * need to change the `view` to `nonpayable` which does not conform to 
+     * standard. Therefore, it is safer to use Interface to load the validator
+     * methods.
+     *
      */
     function uri(uint256 id) override public view returns (string memory) {
-        return(
-            string.concat(
-                _baseMetadataUri,
-                Strings.toHexString(address(this)),
-                "/",
-                Strings.toString(id)
-            )
-        );
+        if (_property[id].validator == address(0)) {
+            return "";
+        }
+        return IValidator(_property[id].validator).uri(id);
     }
 
     /**
@@ -1827,16 +1959,40 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         ids = _mintBatch(to, sessionIds, properties, "");
     }
 
+    function burn(
+        address from,
+        uint256 id,
+        uint256 amount
+    ) public whenNotPaused returns (bool success) {
+        _burn(from, id, amount);
+        success = true;
+    }
+
+    function burnBatch(
+        address from,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) public whenNotPaused returns (bool success) {
+        _burnBatch(from, ids, amounts);
+        success = true;
+    }
+
     /**
      * @dev generate token id (to avoid frontrunning)
      */
-    function generateId(address operator, uint256 sessionId) public view whenNotPaused returns(uint256) {
+    function generateId(address operator, uint256 sessionId, string memory operatingAgreement) public view whenNotPaused returns(uint256) {
         /**
          * @dev hash operator address with sessionId and chainId to generate unique token Id
          *      format: string(sender_address) + string(sessionId) => hash to byte32 => cast to uint
          */
         string memory operatorString = Strings.toHexString(uint(uint160(operator)), 20);
-        string memory idString = string.concat(Strings.toString(block.chainid), operatorString, Strings.toString(sessionId));
+        string memory idString = string.concat(
+            Strings.toString(block.chainid),
+            Strings.toHexString(address(this)),
+            operatorString,
+            Strings.toString(sessionId),
+            operatingAgreement
+        );
         uint256 bigId = uint256(keccak256(abi.encodePacked(idString)));
         uint64 smallId = uint64(bigId);
         return uint256(smallId);
@@ -2072,28 +2228,32 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         require(sessionId > 0, "Valid sessionId is required");
         require(property.supply > 0, "Minimum supply is 1");
 
-        address operator = _msgSender();
 
+        // If validator is not specified during mint, use default validator address
+        if (property.validator == address(0)) {
+            // set default validator address
+            property.validator = 0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F;
+        }
         uint256 amount = property.supply;
 
-        uint256 id = generateId(operator, sessionId);
+        uint256 id = generateId(_msgSender(), sessionId, property.operatingAgreement);
 
         require(_property[id].supply == 0, "Session ID already exist, please use a different one");
 
         // uint256[] memory ids = _asSingletonArray(id);
         // uint256[] memory amounts = _asSingletonArray(amount);
 
-        // _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
+        // _beforeTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
 
         _balances[id][to] += amount;
         // Update property data
         _property[id] = property;
 
-        emit TransferSingle(operator, address(0), to, id, amount);
+        emit TransferSingle(_msgSender(), address(0), to, id, amount);
 
-        // _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
+        // _afterTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
 
-        _doSafeTransferAcceptanceCheck(operator, address(0), to, id, amount, data);
+        _doSafeTransferAcceptanceCheck(_msgSender(), address(0), to, id, amount, data);
         return id;
     }
 
@@ -2117,20 +2277,26 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         require(to != address(0), "ERC1155: mint to the zero address");
         require(sessionIds.length == properties.length, "sessionIds and properties length mismatch");
 
-        uint256 size = sessionIds.length;
-        address operator = _msgSender();
-        uint256[] memory ids = new uint256[](size);
-        uint256[] memory amounts = new uint256[](size);
+        // hit stack too deep error when using more variables, so we use sessionsIds.length in multiple
+        // places instead of creating new variables
+        uint256[] memory ids = new uint256[](sessionIds.length);
+        uint256[] memory amounts = new uint256[](sessionIds.length);
 
-        // _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
+        // _beforeTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
 
-        for (uint256 i = 0; i < size; i++) {
+        for (uint256 i = 0; i < sessionIds.length; i++) {
             require(bytes(properties[i].definition).length > 0, "Definition is required");
             require(sessionIds[i] > 0, "Valid sessionId is required");
             require(properties[i].supply > 0, "Minimum supply is 1");
 
-            uint256 id = generateId(operator, sessionIds[i]);
+            uint256 id = generateId(_msgSender(), sessionIds[i], properties[i].operatingAgreement);
             require(_property[id].supply == 0, "Session ID already exist, please use a different one");
+
+            // If validator is not specified during mint, use default validator address
+            if (properties[i].validator == address(0)) {
+                // set default validator address
+                properties[i].validator = 0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F;
+            }
             uint256 amount = properties[i].supply;
 
             ids[i] = id;
@@ -2141,11 +2307,11 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
             _property[id] = properties[i];
         }
 
-        emit TransferBatch(operator, address(0), to, ids, amounts);
+        emit TransferBatch(_msgSender(), address(0), to, ids, amounts);
 
-        // _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
+        // _afterTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
 
-        _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
+        _doSafeBatchTransferAcceptanceCheck(_msgSender(), address(0), to, ids, amounts, data);
         return ids;
     }
 

@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MyProxy is UUPSUpgradeable, Ownable {
+contract ValidatorProxy is UUPSUpgradeable, Ownable {
     address private _impl;
 
     event ImplementationChanged(address indexed proxy, address indexed implementation);
@@ -77,7 +77,6 @@ contract MyProxy is UUPSUpgradeable, Ownable {
      * This function does not return to its internal call site, it will return directly to the external caller.
      */
     function _fallback() internal virtual {
-        // _beforeFallback();
         _delegate(_implementation());
     }
     /**
@@ -89,16 +88,8 @@ contract MyProxy is UUPSUpgradeable, Ownable {
     }
 
     function _authorizeUpgrade(address newImplementation) override internal virtual {
-        require(msg.sender == owner(), "FabricaTokenProxy: caller is not the owner");
+        require(msg.sender == owner(), "FabricaValidatorProxy: caller is not the owner");
         _impl = newImplementation;
         emit ImplementationChanged(address(this), newImplementation);
     }
-
-    /**
-     * @dev Hook that is called before falling back to the implementation. Can happen as part of a manual `_fallback`
-     * call, or as part of the Solidity `fallback` or `receive` functions.
-     *
-     * If overridden should call `super._beforeFallback()`.
-     */
-    // function _beforeFallback() internal virtual {/* nothing */}
 }

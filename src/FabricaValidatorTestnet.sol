@@ -13,30 +13,16 @@ import "./IFabricaValidator.sol";
  *      May add other fields in newer versions
  */
 contract Validator is IValidator {
-    // Test net: https://metadata-staging.fabrica.land/goerli/
-    // Main net: https://metadata.fabrica.land/ethereum/
-    string private _baseMetadataUri = "https://metadata-staging.fabrica.land/goerli/";
-
     /**
-     * @dev See {IERC1155MetadataURI-uri}.
-     *
-     * This implementation returns the same URI for *all* token types. It relies
-     * on the token type ID substitution mechanism
-     * https://eips.ethereum.org/EIPS/eip-1155#metadata[defined in the EIP].
-     *
-     * Clients calling this function must replace the `\{id\}` substring with the
-     * actual token type ID.
-     *
-     * function uri(uint256) public view virtual override returns (string memory) {return _uri;}
-     *
-     * Fabrica: use network name subdomain and contract address + tokenId, no suffix '.json'
+     * @dev use network name subdomain and contract address + tokenId,
+     *      no suffix '.json'
+     *      the proxy contract address is hardcoded here
+     *      (instead of using `address(this)`)
      */
-    function uri(uint256 id) public view returns (string memory) {
+    function uri(uint256 id) public pure returns (string memory) {
         return(
             string.concat(
-                _baseMetadataUri,
-                Strings.toHexString(address(this)),
-                "/",
+                "https://metadata-staging.fabrica.land/goerli/0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F/",
                 Strings.toString(id)
             )
         );
