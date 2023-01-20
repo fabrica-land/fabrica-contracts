@@ -10,19 +10,42 @@
 
 ### Goerli
 
+- Fabrica Token Proxy: 0x2E1feB1efecbadD1aED541eCd251656c23842ec2
+
 - Fabrica Token: 0xABc0de77866855d9C4884279d22A5a98850Cb223
 
-- Fabrica Proxy: 0x2E1feB1efecbadD1aED541eCd251656c23842ec2
+- Testnet Validator Proxy: 0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F
 
-- Testnet Validator Proxy: 0xfCea282244e184D5E8B1920F91446FC75AEA8Cd2
+- Testnet Validator: 0x876CD7299e296B3385C298cf24e6F1b9E3FE3cba (uses Proxy address as part of the uri)
 
-- Testnet Validator: 0xE57CC4B20459Fd1d759e73851A1b998d571525CC (returns testnet metadata link)
 
-- Mainnet Validator: 0xbe82054ea677903039Fba3e50334F46F53000b9C (returns mainnet metadata link)
+### Main net
+
+- Fabrica Token Proxy: TBD
+
+- Fabrica Token: TBD
+
+- Mainnet Validator Proxy: TBD
+
+- Mainnet Validator: TBD
 
 - Null address: 0x0000000000000000000000000000000000000000
 
-## Deployment
+
+## Deployment steps
+
+1. `yarn && yarn build` then `yarn flatten`
+
+2. Copy and paste the files in folder `flatten/` to Remix and deploy
+
+3. Use `0.8.17` complier
+
+4. Validator: (a) deploy validator proxy and verify source code on Etherscan, (b) update the validator proxy address in validator path, (c) build and flatten validator file, deploy with Remix, (d) verify source code on Etherscan, (e) set proxy implementation to the validator contract address, (f) verify proxy on Etherscan
+
+5. Fabrica token: (a) input default validator with the validator proxy address, (b) build and flatten, deploy in Remix, verify source code, (c) deploy Fabrica proxy, verify source code, and verify proxy
+
+
+## Archived
 
 1. Copy the `custom_flatten/FabricaToken1155.sol` file to [remix](https://remix.ethereum.org/) and deploy with Metamask.
 
