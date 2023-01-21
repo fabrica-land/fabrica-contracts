@@ -22,7 +22,9 @@ Previous: 0xABc0de77866855d9C4884279d22A5a98850Cb223
 
 - Testnet Validator Proxy: [0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F](https://goerli.etherscan.io/address/0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F#code)
 
-- Testnet Validator: 0x876CD7299e296B3385C298cf24e6F1b9E3FE3cba (uses Proxy address as part of the uri)
+- Testnet Validator: 0xeB894D4404e159365173174F3aec5b8B654783D1
+
+Previous: 0x876CD7299e296B3385C298cf24e6F1b9E3FE3cba (uses Proxy address as part of the uri)
 
 
 ### Main net

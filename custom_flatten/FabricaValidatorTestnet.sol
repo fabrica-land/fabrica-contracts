@@ -456,7 +456,7 @@ contract Validator is IValidator {
     function uri(uint256 id) public pure returns (string memory) {
         return(
             string.concat(
-                "https://metadata-staging.fabrica.land/goerli/0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F/",
+                "https://metadata-staging.fabrica.land/goerli/0xE259e3626E282711DA4d988192cd807DB44CD7a0/",
                 Strings.toString(id)
             )
         );
