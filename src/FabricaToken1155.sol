@@ -377,7 +377,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         require(sessionId > 0, "Valid sessionId is required");
         require(property.supply > 0, "Minimum supply is 1");
 
-
         // If validator is not specified during mint, use default validator address
         if (property.validator == address(0)) {
             // set default validator address

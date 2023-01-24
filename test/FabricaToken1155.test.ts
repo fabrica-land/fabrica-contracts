@@ -1,38 +1,64 @@
-import {assert, config, expect, use} from 'chai'
-import {Contract, utils} from 'ethers'
-import {deployContract, MockProvider, solidity} from 'ethereum-waffle'
+import { assert, config, expect, use } from 'chai'
+import { deployContract, MockProvider, solidity } from 'ethereum-waffle';
+import { Contract, utils, BigNumber } from 'ethers';
 import FabricaToken from '../build/FabricaToken.json'
+import Validator from '../build/Validator.json'
 
 use(solidity);
 
-describe('FabricaToken', () => {
-  const [wallet, walletTo, validator] = new MockProvider().getWallets();
+config.includeStack = true;
+
+describe('FabricaToken', async () => {
+  const [wallet, walletTo] = new MockProvider().getWallets();
+  let validator: Contract;
   let token: Contract;
 
   beforeEach(async () => {
-    token = await deployContract(wallet, FabricaToken, ['ethereum']);
-    // console.log('zzz token:', token?.deployTransaction?.data)
+    validator = await deployContract(wallet, Validator, []);
+    token = await deployContract(wallet, FabricaToken, []);
   });
 
-  it('Mint successes and returns tokenId', async () => {
+  it('Mint succeeds and returns an tokenId', async () => {
     const sessionId = 1;
     const supply = 100;
     const definition = "definition";
     const operatingAgreement = "operatingAgreement";
     const configuration = "configuration";
-    const { data: tokenId } = await token.mint(walletTo.address, sessionId, supply, definition, operatingAgreement, configuration, validator.address);
+    const result = await token.mint(walletTo.address, sessionId, supply, definition, operatingAgreement, configuration, validator.address);
+    const { data: tokenId } = result;
+
+    // const generatedId = await token.generateId(walletTo.address, sessionId, operatingAgreement);
+    // const decoded = BigNumber.from(generatedId._hex).toString();
+    // console.log('zzz tokenId', tokenId);
+    // console.log('zzz generatedId', generatedId);
+    // console.log('zzz decoded', decoded);
+
+    // const balanceOf = await token.balanceOf(walletTo.address, generatedId._hex);
+    // console.log('zzz balanceOf', balanceOf);
+
     assert(tokenId);
   });
 
-  it('Batch mint successes and returns array of tokenId', async () => {
+  it('Batch mint succeeds and returns an array of tokenIds', async () => {
     const sessionIds = [2, 3];
     const supplies = [10, 20];
     const definitions = ["definition 1", "definition 2"];
     const operatingAgreements = ["operatingAgreement 1", "ops 2"];
     const configurations = ["configuration 1", "config 2"];
     const { data: tokenIds } = await token.mintBatch(walletTo.address, sessionIds, supplies, definitions, operatingAgreements, configurations, [validator.address, validator.address]);
-    // TODO: decode data, check if tokenIds is an array
+
     assert(tokenIds);
+  });
+
+  it('generateId call succeeds and returns the tokenId consistently', async () => {
+    const sessionId = 1;
+    const sessionId2 = 2;
+    const operatingAgreement = "operatingAgreement";
+    const { _hex: id } = await token.generateId(wallet.address, sessionId, operatingAgreement);
+    const { _hex: id2 } = await token.generateId(wallet.address, sessionId, operatingAgreement);
+    const { _hex: id3 } = await token.generateId(wallet.address, sessionId2, operatingAgreement);
+
+    assert(id === id2 && id !== id3);
   });
 
   // it('Transfer adds amount to destination account', async () => {
