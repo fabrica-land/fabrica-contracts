@@ -5,7 +5,7 @@ pragma solidity ^0.8.12;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract FabricaTokenProxy is Ownable {
+contract Proxy is Ownable {
     address private _impl;
 
     event ImplementationChanged(address indexed proxy, address indexed implementation);

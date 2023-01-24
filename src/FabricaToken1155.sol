@@ -63,26 +63,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     }
 
     /**
-     * @dev See {IERC1155MetadataURI-uri}.
-     *
-     * This implementation returns the same URI for *all* token types. It relies
-     * on the token type ID substitution mechanism
-     * https://eips.ethereum.org/EIPS/eip-1155#metadata[defined in the EIP].
-     *
-     * Clients calling this function must replace the `\{id\}` substring with the
-     * actual token type ID.
-     *
-     * function uri(uint256) public view virtual override returns (string memory) {return _uri;}
-     *
-     * Fabrica: use network name subdomain and contract address + tokenId, no suffix '.json'
-     *
-     *`delegatecall` is most gas efficient, `call` can be used, too, to 
-     * call validator. But this `uri` function is a `view` contract by 1155
-     * spec, and both `delegatecall` or `call` can potentially change state,
-     * need to change the `view` to `nonpayable` which does not conform to 
-     * standard. Therefore, it is safer to use Interface to load the validator
-     * methods.
-     *
+     * @dev Delegate to the validator contract
      */
     function uri(uint256 id) override public view returns (string memory) {
         if (_property[id].validator == address(0)) {
@@ -321,10 +302,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         require(to != address(0), "ERC1155: transfer to the zero address");
 
         address operator = _msgSender();
-        uint256[] memory ids = _asSingletonArray(id);
-        uint256[] memory amounts = _asSingletonArray(amount);
-
-        _beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         uint256 fromBalance = _balances[id][from];
         require(fromBalance >= amount, "ERC1155: insufficient balance for transfer");
@@ -334,8 +311,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         _balances[id][to] += amount;
 
         emit TransferSingle(operator, from, to, id, amount);
-
-        _afterTokenTransfer(operator, from, to, ids, amounts, data);
 
         _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);
     }
@@ -362,8 +337,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
 
         address operator = _msgSender();
 
-        _beforeTokenTransfer(operator, from, to, ids, amounts, data);
-
         for (uint256 i = 0; i < ids.length; ++i) {
             uint256 id = ids[i];
             uint256 amount = amounts[i];
@@ -377,8 +350,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         }
 
         emit TransferBatch(operator, from, to, ids, amounts);
-
-        _afterTokenTransfer(operator, from, to, ids, amounts, data);
 
         _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);
     }
@@ -418,18 +389,11 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
 
         require(_property[id].supply == 0, "Session ID already exist, please use a different one");
 
-        // uint256[] memory ids = _asSingletonArray(id);
-        // uint256[] memory amounts = _asSingletonArray(amount);
-
-        // _beforeTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
-
         _balances[id][to] += amount;
         // Update property data
         _property[id] = property;
 
         emit TransferSingle(_msgSender(), address(0), to, id, amount);
-
-        // _afterTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
 
         _doSafeTransferAcceptanceCheck(_msgSender(), address(0), to, id, amount, data);
         return id;
@@ -460,8 +424,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         uint256[] memory ids = new uint256[](sessionIds.length);
         uint256[] memory amounts = new uint256[](sessionIds.length);
 
-        // _beforeTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
-
         for (uint256 i = 0; i < sessionIds.length; i++) {
             require(bytes(properties[i].definition).length > 0, "Definition is required");
             require(sessionIds[i] > 0, "Valid sessionId is required");
@@ -487,8 +449,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
 
         emit TransferBatch(_msgSender(), address(0), to, ids, amounts);
 
-        // _afterTokenTransfer(_msgSender(), address(0), to, ids, amounts, data);
-
         _doSafeBatchTransferAcceptanceCheck(_msgSender(), address(0), to, ids, amounts, data);
         return ids;
     }
@@ -507,10 +467,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         require(from != address(0), "ERC1155: burn from the zero address");
 
         address operator = _msgSender();
-        uint256[] memory ids = _asSingletonArray(id);
-        uint256[] memory amounts = _asSingletonArray(amount);
-
-        _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
 
         uint256 fromBalance = _balances[id][from];
         require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
@@ -520,7 +476,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
 
         emit TransferSingle(operator, from, address(0), id, amount);
 
-        _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
+        _doSafeTransferAcceptanceCheck(operator, from, address(0), id, amount, "");
     }
 
     /**
@@ -538,8 +494,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
 
         address operator = _msgSender();
 
-        _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
-
         for (uint256 i = 0; i < ids.length; i++) {
             uint256 id = ids[i];
             uint256 amount = amounts[i];
@@ -553,7 +507,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
 
         emit TransferBatch(operator, from, address(0), ids, amounts);
 
-        _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
+        _doSafeBatchTransferAcceptanceCheck(operator, from, address(0), ids, amounts, "");
     }
 
     /**
@@ -570,64 +524,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         _operatorApprovals[owner][operator] = approved;
         emit ApprovalForAll(owner, operator, approved);
     }
-
-    /**
-     * @dev Hook that is called before any token transfer. This includes minting
-     * and burning, as well as batched variants.
-     *
-     * The same hook is called on both single and batched variants. For single
-     * transfers, the length of the `ids` and `amounts` arrays will be 1.
-     *
-     * Calling conditions (for each `id` and `amount` pair):
-     *
-     * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-     * of token type `id` will be  transferred to `to`.
-     * - When `from` is zero, `amount` tokens of token type `id` will be minted
-     * for `to`.
-     * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
-     * will be burned.
-     * - `from` and `to` are never both zero.
-     * - `ids` and `amounts` have the same, non-zero length.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-     */
-    function _beforeTokenTransfer(
-        address operator,
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal virtual whenNotPaused {}
-
-    /**
-     * @dev Hook that is called after any token transfer. This includes minting
-     * and burning, as well as batched variants.
-     *
-     * The same hook is called on both single and batched variants. For single
-     * transfers, the length of the `id` and `amount` arrays will be 1.
-     *
-     * Calling conditions (for each `id` and `amount` pair):
-     *
-     * - When `from` and `to` are both non-zero, `amount` of ``from``'s tokens
-     * of token type `id` will be  transferred to `to`.
-     * - When `from` is zero, `amount` tokens of token type `id` will be minted
-     * for `to`.
-     * - when `to` is zero, `amount` of ``from``'s tokens of token type `id`
-     * will be burned.
-     * - `from` and `to` are never both zero.
-     * - `ids` and `amounts` have the same, non-zero length.
-     *
-     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
-     */
-    function _afterTokenTransfer(
-        address operator,
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal virtual whenNotPaused {}
 
     function _doSafeTransferAcceptanceCheck(
         address operator,
@@ -671,12 +567,5 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
                 revert("ERC1155: transfer to non-ERC1155Receiver implementer");
             }
         }
-    }
-
-    function _asSingletonArray(uint256 element) private pure returns (uint256[] memory) {
-        uint256[] memory array = new uint256[](1);
-        array[0] = element;
-
-        return array;
     }
 }

@@ -116,7 +116,7 @@ abstract contract Ownable is Context {
 
 // OpenZeppelin Contracts (last updated v4.6.0) (proxy/Proxy.sol)
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.12;
 
 // import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -191,7 +191,6 @@ contract FabricaTokenProxy is Ownable {
      * This function does not return to its internal call site, it will return directly to the external caller.
      */
     function _fallback() internal virtual {
-        // _beforeFallback();
         _delegate(_implementation());
     }
     /**
