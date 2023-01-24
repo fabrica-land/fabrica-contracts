@@ -112,7 +112,7 @@ abstract contract Ownable is Context {
 }
 
 
-// Root file: src/ProxyFabricaValidator.sol
+// Root file: src/Proxy.sol
 
 // OpenZeppelin Contracts (last updated v4.6.0) (proxy/Proxy.sol)
 
@@ -120,7 +120,7 @@ pragma solidity ^0.8.12;
 
 // import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ValidatorProxy is Ownable {
+contract Proxy is Ownable {
     address private _impl;
 
     event ImplementationChanged(address indexed proxy, address indexed implementation);
