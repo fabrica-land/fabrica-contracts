@@ -29,13 +29,13 @@ Previous: 0x876CD7299e296B3385C298cf24e6F1b9E3FE3cba (uses Proxy address as part
 
 ### Main net
 
-- Fabrica Token Proxy: TBD
+- Fabrica Token Proxy: [0x84afC90d163Ab18D4e66B7D9D9Db6cB60B6150E1](https://etherscan.io/address/0x84afc90d163ab18d4e66b7d9d9db6cb60b6150e1#code)
 
-- Fabrica Token: TBD
+- Fabrica Token: 0xDa5F9606CF3EAa7d6F9aC4879fB9218e5b780463
 
-- Mainnet Validator Proxy: TBD
+- Mainnet Validator Proxy: [0x3Ac4A3C1234a992646D38e7254171C63D498bb59](https://etherscan.io/address/0x3ac4a3c1234a992646d38e7254171c63d498bb59#code)
 
-- Mainnet Validator: TBD
+- Mainnet Validator: 0x50F2CD980cF7E2A9F0453aE5A454adE355D9F3F0
 
 - Null address: 0x0000000000000000000000000000000000000000
 
