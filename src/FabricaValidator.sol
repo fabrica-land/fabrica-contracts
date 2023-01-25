@@ -22,7 +22,7 @@ contract Validator is IValidator {
     function uri(uint256 id) public pure returns (string memory) {
         return(
             string.concat(
-                "https://metadata.fabrica.land/ethereum/[TBD_MAINNET_PROXY_CONTRACT_ADDRESS]/",
+                "https://metadata.fabrica.land/ethereum/0xd8A38b46D8cF9813c7c9233B844DD0eC7D7e8750/",
                 Strings.toString(id)
             )
         );

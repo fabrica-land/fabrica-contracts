@@ -656,7 +656,7 @@ abstract contract ERC1967Upgrade {
 }
 
 
-// Root file: src/ProxyFabricaValidator.sol
+// Root file: src/ProxyFabricaToken1155.sol
 
 // OpenZeppelin Contracts (last updated v4.6.0) (proxy/Proxy.sol)
 
@@ -665,7 +665,7 @@ pragma solidity ^0.8.0;
 // import "@openzeppelin/contracts/proxy/Proxy.sol";
 // import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
 
-contract ValidatorProxy is Proxy, ERC1967Upgrade {
+contract FabricaToken1155Proxy is Proxy, ERC1967Upgrade {
     /**
      * @dev Sets the upgradeable proxy with an implementation specified by `_logic`.
      */
