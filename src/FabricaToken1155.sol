@@ -380,7 +380,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         // If validator is not specified during mint, use default validator address
         if (property.validator == address(0)) {
             // set default validator address
-            property.validator = 0x3Ac4A3C1234a992646D38e7254171C63D498bb59;
+            property.validator = 0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b;
         }
         uint256 amount = property.supply;
 
@@ -434,7 +434,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
             // If validator is not specified during mint, use default validator address
             if (properties[i].validator == address(0)) {
                 // set default validator address
-                properties[i].validator = 0x3Ac4A3C1234a992646D38e7254171C63D498bb59;
+                properties[i].validator = 0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b;
             }
             uint256 amount = properties[i].supply;
 

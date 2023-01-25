@@ -29,21 +29,13 @@ Previous: 0x876CD7299e296B3385C298cf24e6F1b9E3FE3cba (uses Proxy address as part
 
 ### Main net
 
-- Fabrica Token Proxy: 0xf51f64ADa27c882B737cCe150d31827B2971dc4D
-Failed: [0x84afC90d163Ab18D4e66B7D9D9Db6cB60B6150E1](https://etherscan.io/address/0x84afc90d163ab18d4e66b7d9d9db6cb60b6150e1#code)
+- Fabrica Token Proxy: [0xd8A38b46D8cF9813c7c9233B844DD0eC7D7e8750](https://etherscan.io/address/0xd8a38b46d8cf9813c7c9233b844dd0ec7d7e8750#code)
 
-- Fabrica Token: 0xDa5F9606CF3EAa7d6F9aC4879fB9218e5b780463
+- Fabrica Token: 0x8E9d55A4cA3EdF7Bf3263F746AF404A2c985EdF7
 
-- Mainnet Validator Proxy:
-Attempt:
-Works: 0x1076b35aD477dB4B0234031C22732D75f0131484
-Failed: 0xCA896139E283fb7e6012D2A8c900F391d51197CA
-Failed: 0xb53f5c06E5D6e75DF8daA4bd1296811411A4203e
-Failed and contacted support: 0x88Fdea798ff484966e5c1F1402fD9204fEBA33c9
-Failed: 0x958D528e215873be27ebA1EEc3c3b0e9F35256eB
-Not working: [0x3Ac4A3C1234a992646D38e7254171C63D498bb59](https://etherscan.io/address/0x3ac4a3c1234a992646d38e7254171c63d498bb59#code)
+- Mainnet Validator Proxy: [0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b](https://etherscan.io/address/0x6fa2ee5c9841163e88c85a40b70a90fcd5fbb68b#code)
 
-- Mainnet Validator: 0x50F2CD980cF7E2A9F0453aE5A454adE355D9F3F0
+- Mainnet Validator: 0x236fcc678E28e7eE97d83ae926087DC880D1D40D
 
 - Null address: 0x0000000000000000000000000000000000000000
 

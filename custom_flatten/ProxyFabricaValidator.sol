@@ -691,7 +691,7 @@ contract ValidatorProxy is Proxy, ERC1967Upgrade {
      * If `_data` is nonempty, it's used as data in a delegate call to `_logic`. This will typically be an encoded
      * function call, and allows initializing the storage of the proxy like a Solidity constructor.
      */
-    function setImplementationAndCallUUPS(address _logic, bytes memory _data, bool _forceCall) public {
+    function upgradeToAndCallUUPS(address _logic, bytes memory _data, bool _forceCall) public {
         assert(_IMPLEMENTATION_SLOT == bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1));
         _upgradeToAndCallUUPS(_logic, _data, _forceCall);(_logic);
     }
