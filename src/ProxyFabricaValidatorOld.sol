@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.6.0) (proxy/Proxy.sol)
 
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract FabricaTokenProxy is Ownable {
+contract ValidatorProxy is UUPSUpgradeable, Ownable {
     address private _impl;
 
     event ImplementationChanged(address indexed proxy, address indexed implementation);
@@ -84,5 +85,11 @@ contract FabricaTokenProxy is Ownable {
      */
     function _implementation() internal view virtual returns (address) {
         return _impl;
+    }
+
+    function _authorizeUpgrade(address newImplementation) override internal virtual {
+        require(msg.sender == owner(), "FabricaValidatorProxy: caller is not the owner");
+        _impl = newImplementation;
+        emit ImplementationChanged(address(this), newImplementation);
     }
 }
