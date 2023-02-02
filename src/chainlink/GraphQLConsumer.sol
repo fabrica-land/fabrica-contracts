@@ -24,7 +24,9 @@ import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
 contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
     using Chainlink for Chainlink.Request;
 
-    uint256 public score;
+    mapping (bytes32 => string) public requestIdToTokenId;
+    mapping (string => uint256) public tokenIdToScore;
+
     bytes32 private jobId;
     uint256 private fee;
 
@@ -56,6 +58,7 @@ contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
             address(this),
             this.fulfill.selector
         );
+        bytes32 _requestId;
         string memory _url = "https://api3.fabrica.land/graphql";
         string memory _query = "query Token($network: String!, $contractAddress: String!, $tokenId: String!) { token(network: $network, contractAddress: $contractAddress, tokenId: $tokenId) {score}}";
         string memory _variables = string(
@@ -97,7 +100,9 @@ contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
         req.addInt("times", timesAmount);
 
         // Sends the request
-        return sendChainlinkRequest(req, fee);
+        _requestId = sendChainlinkRequest(req, fee);
+        requestIdToTokenId[_requestId] = _tokenId;
+        return _requestId;
     }
 
     /**
@@ -108,7 +113,7 @@ contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
         uint256 _score
     ) public recordChainlinkFulfillment(_requestId) {
         emit FetchScore(_requestId, _score);
-        score = _score;
+        tokenIdToScore[requestIdToTokenId[_requestId]] = _score;
     }
 
     /**

@@ -1194,6 +1194,12 @@ pragma solidity ^0.8.17;
 // import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
 
 /**
+ * IMPORTANT: READ HERE FIRST
+ * After the contract is flattened, rename abstract contract ENSResolver to abstract contract ENSResolver_Chainlink
+ */
+
+
+/**
  * Request testnet LINK and ETH here: https://faucets.chain.link/
  * Find information on LINK Token Contracts and get the latest ETH and LINK faucets here: https://docs.chain.link/docs/link-token-contracts/
  */
@@ -1207,7 +1213,9 @@ pragma solidity ^0.8.17;
 contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
     using Chainlink for Chainlink.Request;
 
-    uint256 public score;
+    mapping (bytes32 => string) public requestIdToTokenId;
+    mapping (string => uint256) public tokenIdToScore;
+
     bytes32 private jobId;
     uint256 private fee;
 
@@ -1239,6 +1247,7 @@ contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
             address(this),
             this.fulfill.selector
         );
+        bytes32 _requestId;
         string memory _url = "https://api3.fabrica.land/graphql";
         string memory _query = "query Token($network: String!, $contractAddress: String!, $tokenId: String!) { token(network: $network, contractAddress: $contractAddress, tokenId: $tokenId) {score}}";
         string memory _variables = string(
@@ -1280,7 +1289,9 @@ contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
         req.addInt("times", timesAmount);
 
         // Sends the request
-        return sendChainlinkRequest(req, fee);
+        _requestId = sendChainlinkRequest(req, fee);
+        requestIdToTokenId[_requestId] = _tokenId;
+        return _requestId;
     }
 
     /**
@@ -1291,7 +1302,7 @@ contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
         uint256 _score
     ) public recordChainlinkFulfillment(_requestId) {
         emit FetchScore(_requestId, _score);
-        score = _score;
+        tokenIdToScore[requestIdToTokenId[_requestId]] = _score;
     }
 
     /**

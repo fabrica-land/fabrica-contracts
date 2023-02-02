@@ -8,6 +8,16 @@
 
 ## Contract Addresses
 
+### Main net
+
+- Fabrica Token Proxy: [0xd8A38b46D8cF9813c7c9233B844DD0eC7D7e8750](https://etherscan.io/address/0xd8a38b46d8cf9813c7c9233b844dd0ec7d7e8750#code)
+
+- Fabrica Token: 0x8E9d55A4cA3EdF7Bf3263F746AF404A2c985EdF7
+
+- Mainnet Validator Proxy: [0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b](https://etherscan.io/address/0x6fa2ee5c9841163e88c85a40b70a90fcd5fbb68b#code)
+
+- Mainnet Validator: 0x236fcc678E28e7eE97d83ae926087DC880D1D40D
+
 ### Goerli
 
 - Test token ID: 11043966458603065864
@@ -26,17 +36,7 @@ Previous: 0xABc0de77866855d9C4884279d22A5a98850Cb223
 
 Previous: 0x876CD7299e296B3385C298cf24e6F1b9E3FE3cba (uses Proxy address as part of the uri)
 
-
-### Main net
-
-- Fabrica Token Proxy: [0xd8A38b46D8cF9813c7c9233B844DD0eC7D7e8750](https://etherscan.io/address/0xd8a38b46d8cf9813c7c9233b844dd0ec7d7e8750#code)
-
-- Fabrica Token: 0x8E9d55A4cA3EdF7Bf3263F746AF404A2c985EdF7
-
-- Mainnet Validator Proxy: [0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b](https://etherscan.io/address/0x6fa2ee5c9841163e88c85a40b70a90fcd5fbb68b#code)
-
-- Mainnet Validator: 0x236fcc678E28e7eE97d83ae926087DC880D1D40D
-
+### Handy variables
 - Null address: 0x0000000000000000000000000000000000000000
 
 
@@ -52,27 +52,12 @@ Previous: 0x876CD7299e296B3385C298cf24e6F1b9E3FE3cba (uses Proxy address as part
 
 5. Fabrica token: (a) input default validator with the validator proxy address, (b) build and flatten, deploy in Remix, verify source code, (c) deploy Fabrica proxy, verify source code, and verify proxy
 
+6. To verify the contract with constructor input, you need to compare the bytecodes from Remix versus the Etherscan and use the diff. The diff will be the `ABI-Encoded` constructor input for verifying the smart contract
 
-## Archived
+## Chainlink
 
-1. Copy the `custom_flatten/FabricaToken1155.sol` file to [remix](https://remix.ethereum.org/) and deploy with Metamask.
+### Goerli
 
-2. Pass in `baseMetadataUri` with the values: `https://metadata-staging.fabrica.land/goerli/` (test nets, use network name at the end, e.g. `goerli`) or `https://metadata.fabrica.land/ethereum/` (main net). Remember to include the trailing `/`
+- Fabrica GraphQL Consumer: [0xd930c6d1d083db75a152AD21AC4EC76b2002DcC6](https://goerli.etherscan.io/address/0xd930c6d1d083db75a152ad21ac4ec76b2002dcc6#readContract)
 
-3. Use Solidity compiler version `0.8.17+commit.8df45f5f` with no optimization
-
-4. To verify the contract with constructor input, you need to compare the bytecodes from Remix versus the Etherscan and use the diff. The diff will be the `ABI-Encoded` constructor input for verifying the smart contract
-
-Note: Sample metadata uri: https://metadata-goerli.fabrica.land/goerli/0x9b0582d387161d855421bb1d54c7150f09548eac/9656060115722854310
-
-Latest deployment contract on Goerli:
-
-Proxy: https://goerli.etherscan.io/address/0x2e1feb1efecbadd1aed541ecd251656c23842ec2#writeContract
-
-Token: https://etherscan.io/address/0xABc0de77866855d9C4884279d22A5a98850Cb223 (transactions available at Proxy only)
-
-Previous deployment contracts on Goerli:
-https://goerli.etherscan.io/address/0x534137ae9f67c534878aa6edf554dd45e1be1265#code
-https://goerli.etherscan.io/address/0x9b0582d387161d855421bb1d54c7150f09548eac
-https://goerli.etherscan.io/address/0x7e0aedbb9c50d6fe3157b92c9755ea2cc683118c
-https://goerli.etherscan.io/address/0xfbb0403140f41f0a8caff57ebbe6221a795da728#code
+- Note: remember to send 0.1 LINK token to the contract before running the oracle
