@@ -1232,9 +1232,12 @@ contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
      */
     constructor() ConfirmedOwner(msg.sender) {
         setChainlinkToken(0x326C977E6efc84E512bB9C30f76E30c160eD06FB);
-        setChainlinkOracle(0xCC79157eb46F5624204f47AB42b3906cAA40eaB7);
-        jobId = "ca98366cc7314957b8c012c72f05aeeb";
-        fee = (1 * LINK_DIVISIBILITY) / 10; // 0,1 * 10**18 (Varies by network and job)
+        // Chainlink suggested validators aren't responding, get a response from the Chainlink's developer Discord
+        // https://github.com/oraclelabs-link/chainlink-node-public-jobs/tree/master/ethereum-goerli/HTTP%20Get%20%3E%20Uint256
+        setChainlinkOracle(0x7ecFBD6CB2D3927Aa68B5F2f477737172F11190a);
+        jobId = "beb323d08e56408a8c85271b2db4f196";
+        // fee = (1 * LINK_DIVISIBILITY) / 10; // 0,1 * 10**18 (Varies by network and job)
+        fee = (25 * LINK_DIVISIBILITY) / 1000; // 0,025 * 10**18 (Varies by network and job)
     }
 
     /**
@@ -1277,7 +1280,7 @@ contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
         // {
         //     "data": {
         //         "token": {
-        //         "score": 132
+        //         "score": 1132
         //         }
         //     }
         // }
