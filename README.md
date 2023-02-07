@@ -58,7 +58,7 @@ Previous: 0x876CD7299e296B3385C298cf24e6F1b9E3FE3cba (uses Proxy address as part
 
 ### Goerli
 
-- Fabrica GraphQL Consumer: [0xd930c6d1d083db75a152AD21AC4EC76b2002DcC6](https://goerli.etherscan.io/address/0xd930c6d1d083db75a152ad21ac4ec76b2002dcc6#readContract)
+- Fabrica API Consumer: [0x03968Ca1DFEa7B1c180681bd6a927577258c6Ce8](https://goerli.etherscan.io/address/0x03968ca1dfea7b1c180681bd6a927577258c6ce8#code)
 
 - Note: remember to send 0.1 LINK token to the contract before running the oracle
 

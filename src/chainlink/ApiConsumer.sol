@@ -21,7 +21,7 @@ import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
  * DO NOT USE THIS CODE IN PRODUCTION.
  */
 
-contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
+contract ApiConsumer is ChainlinkClient, ConfirmedOwner {
     using Chainlink for Chainlink.Request;
 
     mapping (bytes32 => string) public requestIdToTokenId;
@@ -62,22 +62,11 @@ contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
             this.fulfill.selector
         );
         bytes32 _requestId;
-        string memory _url = "https://api3.fabrica.land/graphql";
-        string memory _query = "query Token($network: String!, $contractAddress: String!, $tokenId: String!) { token(network: $network, contractAddress: $contractAddress, tokenId: $tokenId) {score}}";
-        string memory _variables = string(
-            abi.encodePacked(
-                "{\"contractAddress\": \"0xd8a38b46d8cf9813c7c9233b844dd0ec7d7e8750\", \"network\": \"ethereum\", \"tokenId\": \"",
-                _tokenId,
-                "\"}"
-            )
-        );
         string memory _requestUrl = string(
             abi.encodePacked(
-                _url,
-                "?query=",
-                _query,
-                "&variables=",
-                _variables
+                "https://api3.fabrica.land/ethereum/0xd8A38b46D8cF9813c7c9233B844DD0eC7D7e8750/",
+                _tokenId,
+                "/score"
             )
         );
 
@@ -89,18 +78,16 @@ contract GraphQLConsumer is ChainlinkClient, ConfirmedOwner {
 
         // Set the path to find the desired data in the API response, where the response format is:
         // {
-        //     "data": {
-        //         "token": {
-        //         "score": 1132
-        //         }
-        //     }
+        //     "total": 112
         // }
         // request.add("path", "data.token.score"); // Chainlink nodes prior to 1.0.0 support this format
-        req.add("path", "data,token,score"); // Chainlink nodes 1.0.0 and later support this format
+        req.add("path", "total"); // Chainlink nodes 1.0.0 and later support this format
 
         // Multiply the result by 1000000000000000000 to remove decimals
         int256 timesAmount = 10 ** 18;
         req.addInt("times", timesAmount);
+        // "multiply" is a required param
+        req.addInt("multiply", 1);
 
         // Sends the request
         _requestId = sendChainlinkRequest(req, fee);
