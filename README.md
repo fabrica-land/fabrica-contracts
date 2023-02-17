@@ -54,6 +54,12 @@ Previous: 0x876CD7299e296B3385C298cf24e6F1b9E3FE3cba (uses Proxy address as part
 
 6. To verify the contract with constructor input, you need to compare the bytecodes from Remix versus the Etherscan and use the diff. The diff will be the `ABI-Encoded` constructor input for verifying the smart contract
 
+## Score in Validator
+
+### Goerli
+
+- Fabrica Validator V2: [0xFfF595A28EB4C83CD7AFB758Cd021F98226E840f](https://goerli.etherscan.io/address/0xfff595a28eb4c83cd7afb758cd021f98226e840f#readContract)
+
 ## Chainlink
 
 ### Goerli
