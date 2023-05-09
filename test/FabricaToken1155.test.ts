@@ -24,28 +24,28 @@ describe('FabricaToken', async () => {
     const definition = "definition";
     const operatingAgreement = "operatingAgreement";
     const configuration = "configuration";
-    const result = await token.mint(walletTo.address, sessionId, supply, definition, operatingAgreement, configuration, validator.address);
+    const result = await token.mint([walletTo.address], sessionId, [supply], definition, operatingAgreement, configuration, validator.address);
     const { data: tokenId } = result;
 
-    // const generatedId = await token.generateId(walletTo.address, sessionId, operatingAgreement);
-    // const decoded = BigNumber.from(generatedId._hex).toString();
-    // console.log('zzz tokenId', tokenId);
-    // console.log('zzz generatedId', generatedId);
-    // console.log('zzz decoded', decoded);
+    const generatedId = await token.generateId(walletTo.address, sessionId, operatingAgreement);
+    const decoded = BigNumber.from(generatedId._hex).toString();
+    console.log('zzz tokenId', tokenId);
+    console.log('zzz generatedId', generatedId);
+    console.log('zzz decoded', decoded);
 
-    // const balanceOf = await token.balanceOf(walletTo.address, generatedId._hex);
-    // console.log('zzz balanceOf', balanceOf);
+    const balanceOf = await token.balanceOf(walletTo.address, generatedId._hex);
+    console.log('zzz balanceOf', balanceOf);
 
     assert(tokenId);
   });
 
   it('Batch mint succeeds and returns an array of tokenIds', async () => {
     const sessionIds = [2, 3];
-    const supplies = [10, 20];
+    const supply = 20;
     const definitions = ["definition 1", "definition 2"];
     const operatingAgreements = ["operatingAgreement 1", "ops 2"];
     const configurations = ["configuration 1", "config 2"];
-    const { data: tokenIds } = await token.mintBatch(walletTo.address, sessionIds, supplies, definitions, operatingAgreements, configurations, [validator.address, validator.address]);
+    const { data: tokenIds } = await token.mintBatch([walletTo.address], sessionIds, [supply], definitions, operatingAgreements, configurations, [validator.address, validator.address]);
 
     assert(tokenIds);
   });
