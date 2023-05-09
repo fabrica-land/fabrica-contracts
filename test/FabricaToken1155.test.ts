@@ -1,6 +1,6 @@
-import { assert, config, expect, use } from 'chai'
+import { assert, config, use } from 'chai'
 import { deployContract, MockProvider, solidity } from 'ethereum-waffle';
-import { Contract, utils, BigNumber } from 'ethers';
+import { Contract } from 'ethers';
 import FabricaToken from '../build/FabricaToken.json'
 import Validator from '../build/Validator.json'
 
@@ -27,14 +27,14 @@ describe('FabricaToken', async () => {
     const result = await token.mint([walletTo.address], sessionId, [supply], definition, operatingAgreement, configuration, validator.address);
     const { data: tokenId } = result;
 
-    const generatedId = await token.generateId(walletTo.address, sessionId, operatingAgreement);
-    const decoded = BigNumber.from(generatedId._hex).toString();
-    console.log('zzz tokenId', tokenId);
-    console.log('zzz generatedId', generatedId);
-    console.log('zzz decoded', decoded);
+    // const generatedId = await token.generateId(walletTo.address, sessionId, operatingAgreement);
+    // const decoded = BigNumber.from(generatedId._hex).toString();
+    // console.log('zzz tokenId', tokenId);
+    // console.log('zzz generatedId', generatedId);
+    // console.log('zzz decoded', decoded);
 
-    const balanceOf = await token.balanceOf(walletTo.address, generatedId._hex);
-    console.log('zzz balanceOf', balanceOf);
+    // const balanceOf = await token.balanceOf(walletTo.address, generatedId._hex);
+    // console.log('zzz balanceOf', balanceOf);
 
     assert(tokenId);
   });
