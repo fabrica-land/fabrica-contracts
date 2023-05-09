@@ -64,3 +64,6 @@ typings/
 .env
 .env.test
 .DS_Store
+
+# IDE settings
+.idea
