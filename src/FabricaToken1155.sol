@@ -66,9 +66,6 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      * @dev Delegate to the validator contract
      */
     function uri(uint256 id) override public view returns (string memory) {
-        if (_property[id].validator == address(0)) {
-            return "";
-        }
         return IValidator(_property[id].validator).uri(id);
     }
 
