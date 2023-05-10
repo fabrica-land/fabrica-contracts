@@ -12,8 +12,6 @@ import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "./IFabricaValidator.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-using SafeMath for uint256;
-
 /**
  * @dev Implementation of the Fabrica ERC1155 multi-token.
  * See https://eips.ethereum.org/EIPS/eip-1155
@@ -91,7 +89,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         for (uint256 i = 0; i < amounts.length; i++) {
             uint256 amount = amounts[i];
             require(amount > 0, 'Each amount must be greater than zero');
-            supply = supply.add(amount);
+            supply += amount;
         }
         Property memory property;
         property.supply = supply;
@@ -119,7 +117,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         for (uint256 i = 0; i < amounts.length; i++) {
             uint256 amount = amounts[i];
             require(amount > 0, 'Each amount must be greater than zero');
-            supply = supply.add(amount);
+            supply += amount;
         }
         uint256 size = sessionIds.length;
         Property[] memory properties = new Property[](size);
