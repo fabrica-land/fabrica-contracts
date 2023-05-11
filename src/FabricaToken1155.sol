@@ -63,31 +63,40 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     }
 
     /**
-     * @dev Delegate to the validator contract
+     * @dev Delegate to the validator contract: default to the Fabrica validator
      */
     function uri(uint256 id) override public view returns (string memory) {
-        return IValidator(_property[id].validator).uri(id);
+        address validator = _property[id].validator == address(0)
+            ? 0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b
+            : _property[id].validator;
+        return IValidator(validator).uri(id);
     }
 
     /**
      * @dev `mint` allows users to mint to 3rd party (although it allows to mint to self as well)
      */
     function mint(
-        address to,
+        address[] memory recipients,
         uint256 sessionId,
-        uint256 supply,
+        uint256[] memory amounts,
         string memory definition,
         string memory operatingAgreement,
         string memory configuration,
         address validator
     ) public whenNotPaused returns (uint256) {
+        uint256 supply = 0;
+        for (uint256 i = 0; i < amounts.length; i++) {
+            uint256 amount = amounts[i];
+            require(amount > 0, 'Each amount must be greater than zero');
+            supply += amount;
+        }
         Property memory property;
         property.supply = supply;
         property.operatingAgreement = operatingAgreement;
         property.definition = definition;
         property.configuration = configuration;
         property.validator = validator;
-        uint256 id = _mint(to, sessionId, property, "");
+        uint256 id = _mint(recipients, sessionId, amounts, property, "");
         return id;
     }
 
@@ -95,24 +104,30 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      * @dev `mintBatch` allows users to mint in bulk
      */
     function mintBatch(
-        address to,
+        address[] memory recipients,
         uint256[] memory sessionIds,
-        uint256[] memory supplies,
+        uint256[] memory amounts,
         string[] memory definitions,
         string[] memory operatingAgreements,
         string[] memory configurations,
         address[] memory validators
     ) public whenNotPaused returns (uint256[] memory ids) {
+        uint256 supply = 0;
+        for (uint256 i = 0; i < amounts.length; i++) {
+            uint256 amount = amounts[i];
+            require(amount > 0, 'Each amount must be greater than zero');
+            supply += amount;
+        }
         uint256 size = sessionIds.length;
         Property[] memory properties = new Property[](size);
         for (uint256 i = 0; i < size; i++) {
-            properties[i].supply = supplies[i];
+            properties[i].supply = supply;
             properties[i].operatingAgreement = operatingAgreements[i];
             properties[i].definition = definitions[i];
             properties[i].configuration = configurations[i];
             properties[i].validator = validators[i];
         }
-        ids = _mintBatch(to, sessionIds, properties, "");
+        ids = _mintBatch(recipients, sessionIds, amounts, properties, "");
     }
 
     function burn(
@@ -364,34 +379,33 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      * - `definition` cannot be null.
      */
     function _mint(
-        address to,
+        address[] memory recipients,
         uint sessionId,
+        uint256[] memory amounts,
         Property memory property,
         bytes memory data
     ) internal virtual whenNotPaused returns(uint256) {
-        require(to != address(0), "ERC1155: mint to the zero address");
         require(bytes(property.definition).length > 0, "Definition is required");
         require(sessionId > 0, "Valid sessionId is required");
         require(property.supply > 0, "Minimum supply is 1");
-
+        require(recipients.length == amounts.length, 'Number of recipients and amounts must match');
         // If validator is not specified during mint, use default validator address
         if (property.validator == address(0)) {
             // set default validator address
             property.validator = 0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b;
         }
-        uint256 amount = property.supply;
-
         uint256 id = generateId(_msgSender(), sessionId, property.operatingAgreement);
-
         require(_property[id].supply == 0, "Session ID already exist, please use a different one");
-
-        _balances[id][to] += amount;
+        for (uint256 i = 0; i < recipients.length; i++) {
+            address to = recipients[i];
+            require(to != address(0), "ERC1155: mint to the zero address");
+            uint256 amount = amounts[i];
+            _balances[id][to] += amount;
+            _doSafeTransferAcceptanceCheck(_msgSender(), address(0), to, id, amount, data);
+            emit TransferSingle(_msgSender(), address(0), to, id, amount);
+        }
         // Update property data
         _property[id] = property;
-
-        emit TransferSingle(_msgSender(), address(0), to, id, amount);
-
-        _doSafeTransferAcceptanceCheck(_msgSender(), address(0), to, id, amount, data);
         return id;
     }
 
@@ -407,45 +421,45 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      * acceptance magic value.
      */
     function _mintBatch(
-        address to,
+        address[] memory recipients,
         uint256[] memory sessionIds,
+        uint256[] memory amounts,
         Property[] memory properties,
         bytes memory data
     ) internal virtual whenNotPaused returns(uint256[] memory) {
-        require(to != address(0), "ERC1155: mint to the zero address");
+        require(recipients.length == amounts.length, 'Number of recipients and amounts must match');
         require(sessionIds.length == properties.length, "sessionIds and properties length mismatch");
-
         // hit stack too deep error when using more variables, so we use sessionsIds.length in multiple
         // places instead of creating new variables
         uint256[] memory ids = new uint256[](sessionIds.length);
-        uint256[] memory amounts = new uint256[](sessionIds.length);
-
         for (uint256 i = 0; i < sessionIds.length; i++) {
             require(bytes(properties[i].definition).length > 0, "Definition is required");
             require(sessionIds[i] > 0, "Valid sessionId is required");
             require(properties[i].supply > 0, "Minimum supply is 1");
-
             uint256 id = generateId(_msgSender(), sessionIds[i], properties[i].operatingAgreement);
+            for (uint256 j = 0; j < recipients.length; j++) {
+                address to = recipients[j];
+                require(to != address(0), "ERC1155: mint to the zero address");
+                uint256 amount = amounts[j];
+                _balances[id][to] += amount;
+                uint256[] memory amountsForRecipient = new uint256[](ids.length);
+                for (uint256 k = 0; k < ids.length; k++) {
+                    amountsForRecipient[k] = amount;
+                }
+                _doSafeBatchTransferAcceptanceCheck(_msgSender(), address(0), to, ids, amountsForRecipient, data);
+                emit TransferBatch(_msgSender(), address(0), to, ids, amountsForRecipient);
+            }
             require(_property[id].supply == 0, "Session ID already exist, please use a different one");
-
             // If validator is not specified during mint, use default validator address
             if (properties[i].validator == address(0)) {
                 // set default validator address
                 properties[i].validator = 0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b;
             }
-            uint256 amount = properties[i].supply;
-
             ids[i] = id;
-            amounts[i] = amount;
-
-            _balances[id][to] += amount;
             // Update property data
             _property[id] = properties[i];
         }
 
-        emit TransferBatch(_msgSender(), address(0), to, ids, amounts);
-
-        _doSafeBatchTransferAcceptanceCheck(_msgSender(), address(0), to, ids, amounts, data);
         return ids;
     }
 

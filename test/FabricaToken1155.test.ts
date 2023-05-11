@@ -1,6 +1,6 @@
-import { assert, config, expect, use } from 'chai'
+import { assert, config, use } from 'chai'
 import { deployContract, MockProvider, solidity } from 'ethereum-waffle';
-import { Contract, utils, BigNumber } from 'ethers';
+import { Contract } from 'ethers';
 import FabricaToken from '../build/FabricaToken.json'
 import Validator from '../build/Validator.json'
 
@@ -24,7 +24,7 @@ describe('FabricaToken', async () => {
     const definition = "definition";
     const operatingAgreement = "operatingAgreement";
     const configuration = "configuration";
-    const result = await token.mint(walletTo.address, sessionId, supply, definition, operatingAgreement, configuration, validator.address);
+    const result = await token.mint([walletTo.address], sessionId, [supply], definition, operatingAgreement, configuration, validator.address);
     const { data: tokenId } = result;
 
     // const generatedId = await token.generateId(walletTo.address, sessionId, operatingAgreement);
@@ -41,11 +41,11 @@ describe('FabricaToken', async () => {
 
   it('Batch mint succeeds and returns an array of tokenIds', async () => {
     const sessionIds = [2, 3];
-    const supplies = [10, 20];
+    const supply = 20;
     const definitions = ["definition 1", "definition 2"];
     const operatingAgreements = ["operatingAgreement 1", "ops 2"];
     const configurations = ["configuration 1", "config 2"];
-    const { data: tokenIds } = await token.mintBatch(walletTo.address, sessionIds, supplies, definitions, operatingAgreements, configurations, [validator.address, validator.address]);
+    const { data: tokenIds } = await token.mintBatch([walletTo.address], sessionIds, [supply], definitions, operatingAgreements, configurations, [validator.address, validator.address]);
 
     assert(tokenIds);
   });
