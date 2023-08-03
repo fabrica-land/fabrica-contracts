@@ -8,6 +8,12 @@
 
 ## Contract Addresses
 
+### Sepolia
+- 1155 Token Proxy: 0x13364c9D131dC2e0C83Be9D2fD3edb6627536544
+- 1155 Token Implementation: 0x62AB1aA5dE5a824969Fa954e57E1655896F48b86
+- Validator Proxy: 0x0BC24a5c475232F9d2501fFc52C3685741d6F517
+- Validator Implementation: 0xa991DDB60c5a17f1F022c587c30e65d70a8558cc
+
 ### Goerli
 
 - Test token ID: 11043966458603065864

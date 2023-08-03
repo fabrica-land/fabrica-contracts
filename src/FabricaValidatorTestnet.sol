@@ -22,7 +22,7 @@ contract Validator is IValidator {
     function uri(uint256 id) public pure returns (string memory) {
         return(
             string.concat(
-                "https://metadata-staging.fabrica.land/goerli/0xE259e3626E282711DA4d988192cd807DB44CD7a0/",
+                "https://metadata-staging.fabrica.land/sepolia/0x13364c9D131dC2e0C83Be9D2fD3edb6627536544/",
                 Strings.toString(id)
             )
         );
