@@ -19,6 +19,10 @@ contract FabricaValidator is IFabricaValidator, UUPSUpgradeable, Initializable, 
 
     string private _baseUri;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize() public initializer {
         __Ownable_init();
     }

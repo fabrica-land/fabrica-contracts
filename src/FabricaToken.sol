@@ -24,6 +24,10 @@ import "./IFabricaValidator.sol";
 contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC1155Upgradeable, IERC1155MetadataURIUpgradeable, OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable {
     using AddressUpgradeable for address;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize() public initializer {
         __Context_init();
         __ERC165_init();
