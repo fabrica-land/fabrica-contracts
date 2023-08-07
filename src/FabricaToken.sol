@@ -3,13 +3,15 @@
 
 pragma solidity ^0.8.21;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "./IFabricaValidator.sol";
 
 /**
@@ -19,8 +21,15 @@ import "./IFabricaValidator.sol";
  *
  * _Available since v3.1._
  */
-contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable, Pausable, UUPSUpgradeable {
-    using Address for address;
+contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC1155Upgradeable, IERC1155MetadataURIUpgradeable, OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable {
+    using AddressUpgradeable for address;
+
+    function initialize() public initializer {
+        __Context_init();
+        __ERC165_init();
+        __Ownable_init();
+        __Pausable_init();
+    }
 
     // Struct needed to avoid stack too deep error
     struct Property {
@@ -71,10 +80,10 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165Upgradeable) returns (bool) {
         return
-            interfaceId == type(IERC1155).interfaceId ||
-            interfaceId == type(IERC1155MetadataURI).interfaceId ||
+            interfaceId == type(IERC1155Upgradeable).interfaceId ||
+            interfaceId == type(IERC1155MetadataURIUpgradeable).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
@@ -574,14 +583,14 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         bytes memory data
     ) private whenNotPaused {
         if (to.isContract()) {
-            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
-                if (response != IERC1155Receiver.onERC1155Received.selector) {
-                    revert("ERC1155: ERC1155Receiver rejected tokens");
+            try IERC1155ReceiverUpgradeable(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+                if (response != IERC1155ReceiverUpgradeable.onERC1155Received.selector) {
+                    revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
                 }
             } catch Error(string memory reason) {
                 revert(reason);
             } catch {
-                revert("ERC1155: transfer to non-ERC1155Receiver implementer");
+                revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
             }
         }
     }
@@ -595,16 +604,16 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         bytes memory data
     ) private whenNotPaused {
         if (to.isContract()) {
-            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
+            try IERC1155ReceiverUpgradeable(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
                 bytes4 response
             ) {
-                if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
-                    revert("ERC1155: ERC1155Receiver rejected tokens");
+                if (response != IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector) {
+                    revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
                 }
             } catch Error(string memory reason) {
                 revert(reason);
             } catch {
-                revert("ERC1155: transfer to non-ERC1155Receiver implementer");
+                revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
             }
         }
     }
