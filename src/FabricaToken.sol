@@ -3,6 +3,7 @@
 
 pragma solidity ^0.8.21;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
@@ -18,7 +19,7 @@ import "./IFabricaValidator.sol";
  *
  * _Available since v3.1._
  */
-contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Pausable, UUPSUpgradeable {
+contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable, Pausable, UUPSUpgradeable {
     using Address for address;
 
     // Struct needed to avoid stack too deep error
@@ -77,15 +78,11 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Pausabl
             super.supportsInterface(interfaceId);
     }
 
-    function pause() public whenNotPaused {
-        // Check if the caller matches the admin address of the ERC1967Proxy contract.
-        require(msg.sender == _getAdmin(), "Only the proxy admin can pause the contract.");
+    function pause() public onlyOwner whenNotPaused {
         _pause();
     }
 
-    function unpause() public whenPaused {
-        // Check if the caller matches the admin address of the ERC1967Proxy contract.
-        require(msg.sender == _getAdmin(), "Only the proxy admin can unpause the contract.");
+    function unpause() public onlyOwner whenPaused {
         _unpause();
     }
 
