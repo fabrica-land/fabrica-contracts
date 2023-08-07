@@ -15,6 +15,7 @@ import "./IFabricaValidator.sol";
  *      May add other fields in newer versions
  */
 contract FabricaValidator is IFabricaValidator, UUPSUpgradeable, Initializable, OwnableUpgradeable {
+    using AddressUpgradeable for address;
 
     string private _baseUri;
 
