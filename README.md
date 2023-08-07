@@ -9,10 +9,10 @@
 ## Contract Addresses
 
 ### Sepolia
-- 1155 Token Proxy: 0x13364c9D131dC2e0C83Be9D2fD3edb6627536544
-- 1155 Token Implementation: 0x62AB1aA5dE5a824969Fa954e57E1655896F48b86
-- Validator Proxy: 0x0BC24a5c475232F9d2501fFc52C3685741d6F517
-- Validator Implementation: 0xa991DDB60c5a17f1F022c587c30e65d70a8558cc
+- 1155 Token Implementation: https://sepolia.etherscan.io/token/0x2d818A6ff7f77a94805275e32f0E47c2e84109e5#code
+- 1155 Token Proxy: https://sepolia.etherscan.io/token/0xa2F892f678Ce11b39d68126BC8781746Fec9BBa4#code
+- Validator Implementation: https://sepolia.etherscan.io/token/0xeF2e0CA6BEe19eF3b036991074e04A4817601C59#code
+- Validator Proxy: https://sepolia.etherscan.io/token/0xab591569C9D4D087B037D2DA774327D807f6a4CF#code
 
 ### Goerli
 
@@ -78,7 +78,13 @@ Proxy: https://goerli.etherscan.io/address/0x2e1feb1efecbadd1aed541ecd251656c238
 Token: https://etherscan.io/address/0xABc0de77866855d9C4884279d22A5a98850Cb223 (transactions available at Proxy only)
 
 Previous deployment contracts on Goerli:
-https://goerli.etherscan.io/address/0x534137ae9f67c534878aa6edf554dd45e1be1265#code
-https://goerli.etherscan.io/address/0x9b0582d387161d855421bb1d54c7150f09548eac
-https://goerli.etherscan.io/address/0x7e0aedbb9c50d6fe3157b92c9755ea2cc683118c
-https://goerli.etherscan.io/address/0xfbb0403140f41f0a8caff57ebbe6221a795da728#code
+- https://goerli.etherscan.io/address/0x534137ae9f67c534878aa6edf554dd45e1be1265#code
+- https://goerli.etherscan.io/address/0x9b0582d387161d855421bb1d54c7150f09548eac
+- https://goerli.etherscan.io/address/0x7e0aedbb9c50d6fe3157b92c9755ea2cc683118c
+- https://goerli.etherscan.io/address/0xfbb0403140f41f0a8caff57ebbe6221a795da728#code
+
+Previous Sepolia contracts
+- 1155 Token Proxy: 0x13364c9D131dC2e0C83Be9D2fD3edb6627536544
+- 1155 Token Implementation: 0x62AB1aA5dE5a824969Fa954e57E1655896F48b86
+- Validator Proxy: 0x0BC24a5c475232F9d2501fFc52C3685741d6F517
+- Validator Implementation: 0xa991DDB60c5a17f1F022c587c30e65d70a8558cc

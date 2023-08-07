@@ -7,8 +7,9 @@ yarn-error.log*
 lerna-debug.log*
 
 # Cache & Build
-cache
 build
+cache
+custom_flatten
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

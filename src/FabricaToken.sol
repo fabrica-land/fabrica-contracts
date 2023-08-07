@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.8.0) (token/ERC1155/ERC1155.sol)
 
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.21;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
@@ -18,7 +18,7 @@ import "./IFabricaValidator.sol";
  *
  * _Available since v3.1._
  */
-contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable, Pausable {
+contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Pausable, UUPSUpgradeable {
     using Address for address;
 
     // Struct needed to avoid stack too deep error
@@ -39,10 +39,33 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     // Mapping from token ID to property info
     mapping(uint256 => Property) public _property;
 
+    address private _defaultValidator;
+
     // On-chain data update
     event UpdateConfiguration(uint256, string newData);
     event UpdateOperatingAgreement(uint256, string newData);
     event UpdateValidator(uint256 tokenId, string dataType, address validator);
+
+    function _authorizeUpgrade(address) internal view override {
+        // Check if the caller matches the admin address of the ERC1967Proxy contract.
+        require(msg.sender == _getAdmin(), "Only the proxy admin can authorize upgrades.");
+    }
+
+    /**
+     * @dev Returns the current admin address.
+     */
+    function getAdmin() public view returns (address) {
+        return ERC1967Upgrade._getAdmin();
+    }
+
+    /**
+     * @dev Updates the current admin address.
+     */
+    function changeAdmin(address _newAdmin) public {
+        // Check if the caller matches the admin address of the ERC1967Proxy contract.
+        require(msg.sender == _getAdmin(), "Only the proxy admin can change the proxy admin.");
+        ERC1967Upgrade._changeAdmin(_newAdmin);
+    }
 
     /**
      * @dev See {IERC165-supportsInterface}.
@@ -54,12 +77,22 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
             super.supportsInterface(interfaceId);
     }
 
-    function pause() public onlyOwner whenNotPaused {
+    function pause() public whenNotPaused {
+        // Check if the caller matches the admin address of the ERC1967Proxy contract.
+        require(msg.sender == _getAdmin(), "Only the proxy admin can pause the contract.");
         _pause();
     }
 
-    function unpause() public onlyOwner whenPaused {
+    function unpause() public whenPaused {
+        // Check if the caller matches the admin address of the ERC1967Proxy contract.
+        require(msg.sender == _getAdmin(), "Only the proxy admin can unpause the contract.");
         _unpause();
+    }
+
+    function setDefaultValidator(address defaultValidator) public {
+        // Check if the caller matches the admin address of the ERC1967Proxy contract.
+        require(msg.sender == _getAdmin(), "Only the proxy admin can set the default validator.");
+        _defaultValidator = defaultValidator;
     }
 
     /**
@@ -67,9 +100,9 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
      */
     function uri(uint256 id) override public view returns (string memory) {
         address validator = _property[id].validator == address(0)
-            ? 0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b
+            ? _defaultValidator
             : _property[id].validator;
-        return IValidator(validator).uri(id);
+        return IFabricaValidator(validator).uri(id);
     }
 
     /**
@@ -392,7 +425,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         // If validator is not specified during mint, use default validator address
         if (property.validator == address(0)) {
             // set default validator address
-            property.validator = 0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b;
+            property.validator = _defaultValidator;
         }
         uint256 id = generateId(_msgSender(), sessionId, property.operatingAgreement);
         require(_property[id].supply == 0, "Session ID already exist, please use a different one");
@@ -453,7 +486,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
             // If validator is not specified during mint, use default validator address
             if (properties[i].validator == address(0)) {
                 // set default validator address
-                properties[i].validator = 0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b;
+                properties[i].validator = _defaultValidator;
             }
             ids[i] = id;
             // Update property data

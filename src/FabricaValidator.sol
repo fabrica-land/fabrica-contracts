@@ -1,30 +1,53 @@
 // SPDX-License-Identifier: MIT
 // Validator smart contract for Fabrica version 1.0
 
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.21;
 
+import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "./IFabricaValidator.sol";
-
 
 /**
  * @dev Implementation of the Fabrica validator smart contract
  *      Delegates the metadata `uri` function to this contract
  *      May add other fields in newer versions
  */
-contract Validator is IValidator {
+contract FabricaValidator is IFabricaValidator, UUPSUpgradeable {
+
+    string private _baseUri;
+
+    function _authorizeUpgrade(address) internal view override {
+        // Check if the caller matches the admin address of the ERC1967Proxy contract.
+        require(msg.sender == _getAdmin(), "Only the proxy admin can authorize upgrades.");
+    }
+
+    function getImplementation() public view returns (address) {
+        return _getImplementation();
+    }
+
     /**
-     * @dev use network name subdomain and contract address + tokenId,
-     *      no suffix '.json'
-     *      the proxy contract address is hardcoded here
-     *      (instead of using `address(this)`)
+     * @dev Returns the current admin address.
      */
-    function uri(uint256 id) public pure returns (string memory) {
-        return(
-            string.concat(
-                "https://metadata.fabrica.land/ethereum/0xd8A38b46D8cF9813c7c9233B844DD0eC7D7e8750/",
-                Strings.toString(id)
-            )
-        );
+    function getAdmin() public view returns (address) {
+        return ERC1967Upgrade._getAdmin();
+    }
+
+    /**
+     * @dev Updates the current admin address.
+     */
+    function changeAdmin(address _newAdmin) public {
+        // Check if the caller matches the admin address of the ERC1967Proxy contract.
+        require(msg.sender == _getAdmin(), "Only the proxy admin can change the proxy admin.");
+        ERC1967Upgrade._changeAdmin(_newAdmin);
+    }
+
+    function setBaseUri(string memory baseUri) public {
+        // Check if the caller matches the admin address of the ERC1967Proxy contract.
+        require(msg.sender == _getAdmin(), "Only the proxy admin can change the proxy admin.");
+        _baseUri = baseUri;
+    }
+
+    function uri(uint256 id) public view returns (string memory) {
+        return string.concat(_baseUri, Strings.toString(id));
     }
 }

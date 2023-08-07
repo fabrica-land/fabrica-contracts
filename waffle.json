@@ -1,6 +1,12 @@
 {
   "compilerType": "solcjs",
-  "compilerVersion": "0.8.17",
+  "compilerVersion": "0.8.21",
+  "compilerOptions": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 1
+    }
+  },
   "sourceDirectory": "./src",
   "outputDirectory": "./build",
   "flattenOutputDirectory": "./custom_flatten"
