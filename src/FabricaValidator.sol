@@ -5,6 +5,8 @@ pragma solidity ^0.8.21;
 
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./IFabricaValidator.sol";
 
 /**
@@ -12,9 +14,13 @@ import "./IFabricaValidator.sol";
  *      Delegates the metadata `uri` function to this contract
  *      May add other fields in newer versions
  */
-contract FabricaValidator is IFabricaValidator, UUPSUpgradeable {
+contract FabricaValidator is IFabricaValidator, UUPSUpgradeable, Initializable, OwnableUpgradeable {
 
     string private _baseUri;
+
+    function initialize() public initializer {
+        __Ownable_init();
+    }
 
     function _authorizeUpgrade(address) internal view override {
         // Check if the caller matches the admin address of the ERC1967Proxy contract.
@@ -41,9 +47,7 @@ contract FabricaValidator is IFabricaValidator, UUPSUpgradeable {
         ERC1967Upgrade._changeAdmin(_newAdmin);
     }
 
-    function setBaseUri(string memory baseUri) public {
-        // Check if the caller matches the admin address of the ERC1967Proxy contract.
-        require(msg.sender == _getAdmin(), "Only the proxy admin can change the proxy admin.");
+    function setBaseUri(string memory baseUri) public onlyOwner {
         _baseUri = baseUri;
     }
 

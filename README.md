@@ -9,7 +9,7 @@
 ## Contract Addresses
 
 ### Sepolia
-- 1155 Token Implementation: https://sepolia.etherscan.io/token/0x2d818A6ff7f77a94805275e32f0E47c2e84109e5#code
+- 1155 Token Implementation: https://sepolia.etherscan.io/token/0x3418c031dD8c442dF71B4661B368bfa1EBeE7188#code
 - 1155 Token Proxy: https://sepolia.etherscan.io/token/0xa2F892f678Ce11b39d68126BC8781746Fec9BBa4#code
 - Validator Implementation: https://sepolia.etherscan.io/token/0xeF2e0CA6BEe19eF3b036991074e04A4817601C59#code
 - Validator Proxy: https://sepolia.etherscan.io/token/0xab591569C9D4D087B037D2DA774327D807f6a4CF#code
