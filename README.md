@@ -9,9 +9,9 @@
 ## Contract Addresses
 
 ### Sepolia
-- 1155 Token Implementation: https://sepolia.etherscan.io/token/0x3418c031dD8c442dF71B4661B368bfa1EBeE7188#code
+- 1155 Token Implementation: https://sepolia.etherscan.io/token/0xf4E09a171bfBefBE4113e91603EF5a99e76dd366#code
 - 1155 Token Proxy: https://sepolia.etherscan.io/token/0xa2F892f678Ce11b39d68126BC8781746Fec9BBa4#code
-- Validator Implementation: https://sepolia.etherscan.io/token/0xA5d3CA9c42EbB2ed6Dae9B024C47BBD35702360B#code
+- Validator Implementation: https://sepolia.etherscan.io/token/0x7C649c06E9DA1A56E0ef67E813ee425FF3b5eC39#code
 - Validator Proxy: https://sepolia.etherscan.io/token/0xFfF595A28EB4C83CD7AFB758Cd021F98226E840f#code
 
 ### Goerli
