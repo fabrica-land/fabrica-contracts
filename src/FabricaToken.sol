@@ -65,15 +65,19 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         require(msg.sender == _getAdmin(), "Only the proxy admin can authorize upgrades.");
     }
 
+    function getImplementation() public view returns (address) {
+        return _getImplementation();
+    }
+
     /**
-     * @dev Returns the current admin address.
+     * @dev Returns the current proxy admin address.
      */
     function getAdmin() public view returns (address) {
         return ERC1967Upgrade._getAdmin();
     }
 
     /**
-     * @dev Updates the current admin address.
+     * @dev Updates the current proxy admin address.
      */
     function changeAdmin(address _newAdmin) public {
         // Check if the caller matches the admin address of the ERC1967Proxy contract.
