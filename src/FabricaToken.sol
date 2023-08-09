@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC1155/ERC1155.sol)
 
 pragma solidity ^0.8.21;
 
-import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "./FabricaUUPSUpgradeable.sol";
 import "./IFabricaValidator.sol";
 
 /**
@@ -21,7 +21,7 @@ import "./IFabricaValidator.sol";
  *
  * _Available since v3.1._
  */
-contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC1155Upgradeable, IERC1155MetadataURIUpgradeable, OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable {
+contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC1155Upgradeable, IERC1155MetadataURIUpgradeable, OwnableUpgradeable, PausableUpgradeable, FabricaUUPSUpgradeable {
     using AddressUpgradeable for address;
 
     constructor() {
@@ -29,8 +29,9 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
     }
 
     function initialize() public initializer {
-        __Context_init();
         __ERC165_init();
+        // __FabricaUUPSUpgradeable_init() calls __Context_init(), so we skip calling that here.
+        __FabricaUUPSUpgradeable_init();
         __Ownable_init();
         __Pausable_init();
     }
@@ -60,31 +61,6 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
     event UpdateOperatingAgreement(uint256, string newData);
     event UpdateValidator(uint256 tokenId, string dataType, address validator);
 
-    function _authorizeUpgrade(address) internal view override {
-        // Check if the caller matches the admin address of the ERC1967Proxy contract.
-        require(msg.sender == _getAdmin(), "Only the proxy admin can authorize upgrades.");
-    }
-
-    function getImplementation() public view returns (address) {
-        return _getImplementation();
-    }
-
-    /**
-     * @dev Returns the current proxy admin address.
-     */
-    function getAdmin() public view returns (address) {
-        return ERC1967Upgrade._getAdmin();
-    }
-
-    /**
-     * @dev Updates the current proxy admin address.
-     */
-    function changeAdmin(address _newAdmin) public {
-        // Check if the caller matches the admin address of the ERC1967Proxy contract.
-        require(msg.sender == _getAdmin(), "Only the proxy admin can change the proxy admin.");
-        ERC1967Upgrade._changeAdmin(_newAdmin);
-    }
-
     /**
      * @dev See {IERC165-supportsInterface}.
      */
@@ -103,10 +79,12 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         _unpause();
     }
 
-    function setDefaultValidator(address defaultValidator) public {
-        // Check if the caller matches the admin address of the ERC1967Proxy contract.
-        require(msg.sender == _getAdmin(), "Only the proxy admin can set the default validator.");
-        _defaultValidator = defaultValidator;
+    function setDefaultValidator(address newDefaultValidator) public onlyOwner {
+        _defaultValidator = newDefaultValidator;
+    }
+
+    function defaultValidator() public view returns (address) {
+        return _defaultValidator;
     }
 
     /**
@@ -203,12 +181,12 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
          * @dev hash operator address with sessionId and chainId to generate unique token Id
          *      format: string(sender_address) + string(sessionId) => hash to byte32 => cast to uint
          */
-        string memory operatorString = Strings.toHexString(uint(uint160(operator)), 20);
+        string memory operatorString = StringsUpgradeable.toHexString(uint(uint160(operator)), 20);
         string memory idString = string.concat(
-            Strings.toString(block.chainid),
-            Strings.toHexString(address(this)),
+            StringsUpgradeable.toString(block.chainid),
+            StringsUpgradeable.toHexString(address(this)),
             operatorString,
-            Strings.toString(sessionId),
+            StringsUpgradeable.toString(sessionId),
             operatingAgreement
         );
         uint256 bigId = uint256(keccak256(abi.encodePacked(idString)));
@@ -335,7 +313,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         if (supply == 0) {
             return false;
         }
-        uint256 percent = Math.mulDiv(shares, 100, supply);
+        uint256 percent = MathUpgradeable.mulDiv(shares, 100, supply);
         return percent > threshold;
     }
 
