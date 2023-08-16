@@ -2,25 +2,24 @@
 
 ## Contract Addresses
 
-### Sepolia
+### v3.1 Ethereum Mainnet Contracts
+- 1155 Token Proxy: [0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95](https://etherscan.io/token/0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95#readProxyContract)
+- 1155 Token Implementation: `0x43c6eE9D5B2369C5484f69E2Eb3361466855beDd`
+- Validator Proxy: [0x170511f95560A1F280c29026f73a9cD6a4bA8ab0](https://etherscan.io/address/0x170511f95560A1F280c29026f73a9cD6a4bA8ab0#readProxyContract)
+- Validator Implementation: `0x7dEd932Ff0AD55F1D12436A29bCAE846C2115A7C`
+
+### v3.1 Sepolia Contracts
 - 1155 Token Proxy: [0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD](https://sepolia.etherscan.io/token/0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD#readProxyContract)
 - 1155 Token Implementation: `0x07e5bd197335c0d452e74c67733402b741a74bd1`
 - Validator Proxy: [0xAAA7FDc1A573965a2eD47Ab154332b6b55098008](https://sepolia.etherscan.io/address/0xAAA7FDc1A573965a2eD47Ab154332b6b55098008#readProxyContract)
 - Validator Implementation: `0x45c8958ac130dfe9e474a19f80c158b80388b569`
 
-### Goerli
+### v3.0 Goerli Contracts
 - 1155 Token Proxy: [0xE259e3626E282711DA4d988192cd807DB44CD7a0](https://goerli.etherscan.io/token/0xe259e3626e282711da4d988192cd807db44cd7a0#readProxyContract)
 - 1155 Token Implementation: `0xab591569C9D4D087B037D2DA774327D807f6a4CF`
 - Validator Proxy: [0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F](https://goerli.etherscan.io/address/0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F#readProxyContract)
 - Validator Implementation: `0xeB894D4404e159365173174F3aec5b8B654783D1`
 - Test token ID: `11043966458603065864`
-
-### Ethereum Mainnet
-- 1155 Token Proxy: [0xd8A38b46D8cF9813c7c9233B844DD0eC7D7e8750](https://etherscan.io/token/0xd8a38b46d8cf9813c7c9233b844dd0ec7d7e8750#readProxyContract)
-- 1155 Token Implementation: `0x8E9d55A4cA3EdF7Bf3263F746AF404A2c985EdF7`
-- Validator Proxy: [0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b](https://etherscan.io/address/0x6fa2ee5c9841163e88c85a40b70a90fcd5fbb68b#readProxyContract)
-- Validator Implementation: `0x236fcc678E28e7eE97d83ae926087DC880D1D40D`
-
 ### Common
 - Null address: `0x0000000000000000000000000000000000000000`
 
@@ -76,6 +75,12 @@ Make sure:
 - New initializer is passed to `upgradeToAndCall` as a packed ABI call (see above)
 
 ## Archived
+
+### v3.0 mainnet contracts
+- 1155 Token Proxy: [0xd8A38b46D8cF9813c7c9233B844DD0eC7D7e8750](https://etherscan.io/token/0xd8a38b46d8cf9813c7c9233b844dd0ec7d7e8750#readProxyContract)
+- 1155 Token Implementation: `0x8E9d55A4cA3EdF7Bf3263F746AF404A2c985EdF7`
+- Validator Proxy: [0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b](https://etherscan.io/address/0x6fa2ee5c9841163e88c85a40b70a90fcd5fbb68b#readProxyContract)
+- Validator Implementation: `0x236fcc678E28e7eE97d83ae926087DC880D1D40D`
 
 ### Previous Goerli contracts
 - Proxy: https://goerli.etherscan.io/address/0x2e1feb1efecbadd1aed541ecd251656c23842ec2#writeContract
