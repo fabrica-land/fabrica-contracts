@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.8.0) (token/ERC1155/ERC1155.sol)
 
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.21;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "./FabricaUUPSUpgradeable.sol";
 import "./IFabricaValidator.sol";
 
 /**
@@ -18,8 +21,20 @@ import "./IFabricaValidator.sol";
  *
  * _Available since v3.1._
  */
-contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable, Pausable {
-    using Address for address;
+contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC1155Upgradeable, IERC1155MetadataURIUpgradeable, OwnableUpgradeable, PausableUpgradeable, FabricaUUPSUpgradeable {
+    using AddressUpgradeable for address;
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize() public initializer {
+        __ERC165_init();
+        // __FabricaUUPSUpgradeable_init() calls __Context_init(), so we skip calling that here.
+        __FabricaUUPSUpgradeable_init();
+        __Ownable_init();
+        __Pausable_init();
+    }
 
     // Struct needed to avoid stack too deep error
     struct Property {
@@ -39,6 +54,8 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     // Mapping from token ID to property info
     mapping(uint256 => Property) public _property;
 
+    address private _defaultValidator;
+
     // On-chain data update
     event UpdateConfiguration(uint256, string newData);
     event UpdateOperatingAgreement(uint256, string newData);
@@ -47,10 +64,10 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165Upgradeable) returns (bool) {
         return
-            interfaceId == type(IERC1155).interfaceId ||
-            interfaceId == type(IERC1155MetadataURI).interfaceId ||
+            interfaceId == type(IERC1155Upgradeable).interfaceId ||
+            interfaceId == type(IERC1155MetadataURIUpgradeable).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
@@ -62,14 +79,22 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         _unpause();
     }
 
+    function setDefaultValidator(address newDefaultValidator) public onlyOwner {
+        _defaultValidator = newDefaultValidator;
+    }
+
+    function defaultValidator() public view returns (address) {
+        return _defaultValidator;
+    }
+
     /**
      * @dev Delegate to the validator contract: default to the Fabrica validator
      */
     function uri(uint256 id) override public view returns (string memory) {
         address validator = _property[id].validator == address(0)
-            ? 0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b
+            ? _defaultValidator
             : _property[id].validator;
-        return IValidator(validator).uri(id);
+        return IFabricaValidator(validator).uri(id);
     }
 
     /**
@@ -156,12 +181,12 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
          * @dev hash operator address with sessionId and chainId to generate unique token Id
          *      format: string(sender_address) + string(sessionId) => hash to byte32 => cast to uint
          */
-        string memory operatorString = Strings.toHexString(uint(uint160(operator)), 20);
+        string memory operatorString = StringsUpgradeable.toHexString(uint(uint160(operator)), 20);
         string memory idString = string.concat(
-            Strings.toString(block.chainid),
-            Strings.toHexString(address(this)),
+            StringsUpgradeable.toString(block.chainid),
+            StringsUpgradeable.toHexString(address(this)),
             operatorString,
-            Strings.toString(sessionId),
+            StringsUpgradeable.toString(sessionId),
             operatingAgreement
         );
         uint256 bigId = uint256(keccak256(abi.encodePacked(idString)));
@@ -288,7 +313,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         if (supply == 0) {
             return false;
         }
-        uint256 percent = Math.mulDiv(shares, 100, supply);
+        uint256 percent = MathUpgradeable.mulDiv(shares, 100, supply);
         return percent > threshold;
     }
 
@@ -392,7 +417,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         // If validator is not specified during mint, use default validator address
         if (property.validator == address(0)) {
             // set default validator address
-            property.validator = 0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b;
+            property.validator = _defaultValidator;
         }
         uint256 id = generateId(_msgSender(), sessionId, property.operatingAgreement);
         require(_property[id].supply == 0, "Session ID already exist, please use a different one");
@@ -453,7 +478,7 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
             // If validator is not specified during mint, use default validator address
             if (properties[i].validator == address(0)) {
                 // set default validator address
-                properties[i].validator = 0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b;
+                properties[i].validator = _defaultValidator;
             }
             ids[i] = id;
             // Update property data
@@ -544,14 +569,14 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         bytes memory data
     ) private whenNotPaused {
         if (to.isContract()) {
-            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
-                if (response != IERC1155Receiver.onERC1155Received.selector) {
-                    revert("ERC1155: ERC1155Receiver rejected tokens");
+            try IERC1155ReceiverUpgradeable(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+                if (response != IERC1155ReceiverUpgradeable.onERC1155Received.selector) {
+                    revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
                 }
             } catch Error(string memory reason) {
                 revert(reason);
             } catch {
-                revert("ERC1155: transfer to non-ERC1155Receiver implementer");
+                revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
             }
         }
     }
@@ -565,16 +590,16 @@ contract FabricaToken is Context, ERC165, IERC1155, IERC1155MetadataURI, Ownable
         bytes memory data
     ) private whenNotPaused {
         if (to.isContract()) {
-            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
+            try IERC1155ReceiverUpgradeable(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
                 bytes4 response
             ) {
-                if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
-                    revert("ERC1155: ERC1155Receiver rejected tokens");
+                if (response != IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector) {
+                    revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
                 }
             } catch Error(string memory reason) {
                 revert(reason);
             } catch {
-                revert("ERC1155: transfer to non-ERC1155Receiver implementer");
+                revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
             }
         }
     }
