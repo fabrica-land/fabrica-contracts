@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.21;
+pragma solidity ^0.8.23;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -34,6 +34,32 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         __FabricaUUPSUpgradeable_init();
         __Ownable_init();
         __Pausable_init();
+    }
+
+    function initializeV2() public reinitializer(2) {
+        // Mainnet
+        if (_property[5584360490195809515].supply > 0) {
+            _property[5584360490195809515].supply = 0;
+        }
+        if (_property[121246195489681167].supply > 0) {
+            _property[121246195489681167].supply = 0;
+        }
+        // Sepolia
+        if (_property[5713958517081774245].supply > 0) {
+            _property[5713958517081774245].supply = 0;
+        }
+        if (_property[1976155942521829550].supply > 0) {
+            _property[1976155942521829550].supply = 0;
+        }
+        if (_property[16379083226107479501].supply > 0) {
+            _property[16379083226107479501].supply = 0;
+        }
+        if (_property[17173656843293713364].supply > 0) {
+            _property[17173656843293713364].supply = 0;
+        }
+        if (_property[17599246889068243423].supply > 0) {
+            _property[17599246889068243423].supply = 0;
+        }
     }
 
     // Struct needed to avoid stack too deep error
@@ -221,13 +247,10 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         returns (uint256[] memory)
     {
         require(accounts.length == ids.length, "ERC1155: accounts and ids length mismatch");
-
         uint256[] memory batchBalances = new uint256[](accounts.length);
-
         for (uint256 i = 0; i < accounts.length; ++i) {
             batchBalances[i] = balanceOf(accounts[i], ids[i]);
         }
-
         return batchBalances;
     }
 
@@ -337,18 +360,14 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         bytes memory data
     ) internal virtual whenNotPaused {
         require(to != address(0), "ERC1155: transfer to the zero address");
-
         address operator = _msgSender();
-
         uint256 fromBalance = _balances[id][from];
         require(fromBalance >= amount, "ERC1155: insufficient balance for transfer");
         unchecked {
             _balances[id][from] = fromBalance - amount;
         }
         _balances[id][to] += amount;
-
         emit TransferSingle(operator, from, to, id, amount);
-
         _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);
     }
 
@@ -371,13 +390,10 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
     ) internal virtual whenNotPaused {
         require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
         require(to != address(0), "ERC1155: transfer to the zero address");
-
         address operator = _msgSender();
-
         for (uint256 i = 0; i < ids.length; ++i) {
             uint256 id = ids[i];
             uint256 amount = amounts[i];
-
             uint256 fromBalance = _balances[id][from];
             require(fromBalance >= amount, "ERC1155: insufficient balance for transfer");
             unchecked {
@@ -385,9 +401,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
             }
             _balances[id][to] += amount;
         }
-
         emit TransferBatch(operator, from, to, ids, amounts);
-
         _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);
     }
 
@@ -500,17 +514,16 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
      */
     function _burn(address from, uint256 id, uint256 amount) internal virtual {
         require(from != address(0), "ERC1155: burn from the zero address");
-
         address operator = _msgSender();
-
         uint256 fromBalance = _balances[id][from];
+        uint256 fromSupply = _property[id].supply;
         require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
+        require(fromSupply >= amount, "ERC1155: burn amount exceeds supply");
         unchecked {
             _balances[id][from] = fromBalance - amount;
+            _property[id].supply = fromSupply - amount;
         }
-
         emit TransferSingle(operator, from, address(0), id, amount);
-
         _doSafeTransferAcceptanceCheck(operator, from, address(0), id, amount, "");
     }
 
@@ -526,22 +539,20 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
     function _burnBatch(address from, uint256[] memory ids, uint256[] memory amounts) internal virtual {
         require(from != address(0), "ERC1155: burn from the zero address");
         require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
-
         address operator = _msgSender();
-
         for (uint256 i = 0; i < ids.length; i++) {
             uint256 id = ids[i];
             uint256 amount = amounts[i];
-
             uint256 fromBalance = _balances[id][from];
+            uint256 fromSupply = _property[id].supply;
             require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
+            require(fromSupply >= amount, "ERC1155: burn amount exceeds supply");
             unchecked {
                 _balances[id][from] = fromBalance - amount;
+                _property[id].supply = fromSupply - amount;
             }
         }
-
         emit TransferBatch(operator, from, address(0), ids, amounts);
-
         _doSafeBatchTransferAcceptanceCheck(operator, from, address(0), ids, amounts, "");
     }
 

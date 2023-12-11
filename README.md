@@ -26,7 +26,7 @@
 ## Deploying Initial Contracts and Proxies
 1. `yarn && yarn rebuild`
 2. Copy and paste the files in folder `custom_flatten/` to Remix.
-3. Use compiler version `v0.8.21+commit.d9974bed` with optimization enabled and runs set to 1.
+3. Use compiler version `v0.8.23+commit.f704f362` with optimization enabled and runs set to 1.
 4. Validator:
    1. Deploy the `FabricaValidator` contract and verify the source code on Etherscan (be sure to set optimize to true and runs to 1); copy address
    2. Deploy the `FabricaProxy` contract with these constructor arguments, and verify the source code on Etherscan (optimize, 1 run):
@@ -57,7 +57,7 @@ inherit from the upgradeable version of the contract (node_modules/@openzeppelin
 __ClassName_init(); method to a new initializer in your contract. Initializers can only be called once, so the new
 initializer is added and the initial `initialize` method is left alone. The new initializer has a new name
 (e.g. initializeV2) and carries the reinitializer modifier (instead of initializer), which accepts an integer. So take
-the next integer that hasn't been implemented and pass it in, e.g. `function initializeV2() public reinitlize(2) {`
+the next integer that hasn't been implemented and pass it in, e.g. `function initializeV2() public reinitialize(2) {`
 
 In the complex case, you need to call `upgradeToAndCall` in "Write as Proxy" on the proxy contract on Etherscan.
 Pass `0` ETH for the `payableAmount`, the new implementation address in `newImplementation`, and in `data` you need
