@@ -10,7 +10,7 @@
 
 ### v3.1 Sepolia Contracts
 - 1155 Token Proxy: [0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD](https://sepolia.etherscan.io/token/0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD#readProxyContract)
-- 1155 Token Implementation: `0x07e5bd197335c0d452e74c67733402b741a74bd1`
+- 1155 Token Implementation: `0xb13440DD9b24bAe8f80514f3989b7668e4029Ab0`
 - Validator Proxy: [0xAAA7FDc1A573965a2eD47Ab154332b6b55098008](https://sepolia.etherscan.io/address/0xAAA7FDc1A573965a2eD47Ab154332b6b55098008#readProxyContract)
 - Validator Implementation: `0x45c8958ac130dfe9e474a19f80c158b80388b569`
 
@@ -20,13 +20,14 @@
 - Validator Proxy: [0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F](https://goerli.etherscan.io/address/0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F#readProxyContract)
 - Validator Implementation: `0xeB894D4404e159365173174F3aec5b8B654783D1`
 - Test token ID: `11043966458603065864`
+
 ### Common
 - Null address: `0x0000000000000000000000000000000000000000`
 
 ## Deploying Initial Contracts and Proxies
 1. `yarn && yarn rebuild`
 2. Copy and paste the files in folder `custom_flatten/` to Remix.
-3. Use compiler version `v0.8.21+commit.d9974bed` with optimization enabled and runs set to 1.
+3. Use compiler version `v0.8.23+commit.f704f362` with optimization enabled and runs set to 1.
 4. Validator:
    1. Deploy the `FabricaValidator` contract and verify the source code on Etherscan (be sure to set optimize to true and runs to 1); copy address
    2. Deploy the `FabricaProxy` contract with these constructor arguments, and verify the source code on Etherscan (optimize, 1 run):
@@ -57,7 +58,7 @@ inherit from the upgradeable version of the contract (node_modules/@openzeppelin
 __ClassName_init(); method to a new initializer in your contract. Initializers can only be called once, so the new
 initializer is added and the initial `initialize` method is left alone. The new initializer has a new name
 (e.g. initializeV2) and carries the reinitializer modifier (instead of initializer), which accepts an integer. So take
-the next integer that hasn't been implemented and pass it in, e.g. `function initializeV2() public reinitlize(2) {`
+the next integer that hasn't been implemented and pass it in, e.g. `function initializeV2() public reinitialize(2) {`
 
 In the complex case, you need to call `upgradeToAndCall` in "Write as Proxy" on the proxy contract on Etherscan.
 Pass `0` ETH for the `payableAmount`, the new implementation address in `newImplementation`, and in `data` you need
