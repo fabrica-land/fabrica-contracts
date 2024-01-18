@@ -515,6 +515,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
     function _burn(address from, uint256 id, uint256 amount) internal virtual {
         require(from != address(0), "ERC1155: burn from the zero address");
         address operator = _msgSender();
+        require(operator == from, "ERC1155: operator can only burn own token supply");
         uint256 fromBalance = _balances[id][from];
         uint256 fromSupply = _property[id].supply;
         require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
@@ -540,6 +541,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         require(from != address(0), "ERC1155: burn from the zero address");
         require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
         address operator = _msgSender();
+        require(operator == from, "ERC1155: operator can only burn own token supply");
         for (uint256 i = 0; i < ids.length; i++) {
             uint256 id = ids[i];
             uint256 amount = amounts[i];
