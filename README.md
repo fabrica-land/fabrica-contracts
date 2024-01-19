@@ -2,24 +2,17 @@
 
 ## Contract Addresses
 
-### v3.1 Ethereum Mainnet Contracts
+### Ethereum Mainnet Contracts
 - 1155 Token Proxy: [0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95](https://etherscan.io/token/0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95#readProxyContract)
 - 1155 Token Implementation: `0xAc060b48bdd8680b7fCcB8563D78e1B85219485B`
 - Validator Proxy: [0x170511f95560A1F280c29026f73a9cD6a4bA8ab0](https://etherscan.io/address/0x170511f95560A1F280c29026f73a9cD6a4bA8ab0#readProxyContract)
 - Validator Implementation: `0x7dEd932Ff0AD55F1D12436A29bCAE846C2115A7C`
 
-### v3.1 Sepolia Contracts
+### Sepolia Contracts
 - 1155 Token Proxy: [0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD](https://sepolia.etherscan.io/token/0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD#readProxyContract)
 - 1155 Token Implementation: `0x35C6F2f49Ee9077B643b25Eba4564927EDAd8957`
 - Validator Proxy: [0xAAA7FDc1A573965a2eD47Ab154332b6b55098008](https://sepolia.etherscan.io/address/0xAAA7FDc1A573965a2eD47Ab154332b6b55098008#readProxyContract)
 - Validator Implementation: `0x45c8958ac130dfe9e474a19f80c158b80388b569`
-
-### v3.0 Goerli Contracts
-- 1155 Token Proxy: [0xE259e3626E282711DA4d988192cd807DB44CD7a0](https://goerli.etherscan.io/token/0xe259e3626e282711da4d988192cd807db44cd7a0#readProxyContract)
-- 1155 Token Implementation: `0xab591569C9D4D087B037D2DA774327D807f6a4CF`
-- Validator Proxy: [0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F](https://goerli.etherscan.io/address/0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F#readProxyContract)
-- Validator Implementation: `0xeB894D4404e159365173174F3aec5b8B654783D1`
-- Test token ID: `11043966458603065864`
 
 ### Common
 - Null address: `0x0000000000000000000000000000000000000000`
@@ -77,26 +70,31 @@ Make sure:
 
 ## Archived
 
-### Previous mainnet contracts
-
-### v3.0 mainnet contracts
+### Previous Mainnet Contracts
 - 1155 Token Proxy: [0xd8A38b46D8cF9813c7c9233B844DD0eC7D7e8750](https://etherscan.io/token/0xd8a38b46d8cf9813c7c9233b844dd0ec7d7e8750#readProxyContract)
 - 1155 Token Implementations:
-  - `0x8E9d55A4cA3EdF7Bf3263F746AF404A2c985EdF7` (v3.0)
-  - `0x58fe23aeb6e7768457fbc1c89f303835a9de2956` (v3.0)
-  - `0x43c6eE9D5B2369C5484f69E2Eb3361466855beDd` (v3.1)
+  - `0x8E9d55A4cA3EdF7Bf3263F746AF404A2c985EdF7`
+  - `0x58fe23aeb6e7768457fbc1c89f303835a9de2956`
+  - `0x43c6eE9D5B2369C5484f69E2Eb3361466855beDd`
 - Validator Proxy: [0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b](https://etherscan.io/address/0x6fa2ee5c9841163e88c85a40b70a90fcd5fbb68b#readProxyContract)
 - Validator Implementation: `0x236fcc678E28e7eE97d83ae926087DC880D1D40D`
 
-### Previous Goerli contracts
-- Proxy: https://goerli.etherscan.io/address/0x2e1feb1efecbadd1aed541ecd251656c23842ec2#writeContract
-- Token: https://etherscan.io/address/0xABc0de77866855d9C4884279d22A5a98850Cb223 (transactions available at Proxy only)
-- https://goerli.etherscan.io/address/0x534137ae9f67c534878aa6edf554dd45e1be1265#code
-- https://goerli.etherscan.io/address/0x9b0582d387161d855421bb1d54c7150f09548eac
-- https://goerli.etherscan.io/address/0x7e0aedbb9c50d6fe3157b92c9755ea2cc683118c
-- https://goerli.etherscan.io/address/0xfbb0403140f41f0a8caff57ebbe6221a795da728#code
+### Previous Goerli Contracts
+- 1155 Token Proxies:
+  - [0xE259e3626E282711DA4d988192cd807DB44CD7a0](https://goerli.etherscan.io/token/0xe259e3626e282711da4d988192cd807db44cd7a0#readProxyContract)
+  - [0x2E1feB1efecbadD1aED541eCd251656c23842ec2](https://goerli.etherscan.io/address/0x2e1feb1efecbadd1aed541ecd251656c23842ec2#readProxyContract)
+- 1155 Token Implementations:
+  - `0xab591569C9D4D087B037D2DA774327D807f6a4CF`
+  - `0xABc0de77866855d9C4884279d22A5a98850Cb223`
+  - `0x534137ae9f67c534878aa6edf554dd45e1be1265#code`
+  - `0x9b0582d387161d855421bb1d54c7150f09548eac`
+  - `0x7e0aedbb9c50d6fe3157b92c9755ea2cc683118c`
+  - `0xfbb0403140f41f0a8caff57ebbe6221a795da728#code`
+- Validator Proxy: [0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F](https://goerli.etherscan.io/address/0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F#readProxyContract)
+- Validator Implementation: `0xeB894D4404e159365173174F3aec5b8B654783D1`
+- Test token ID: `11043966458603065864`
 
-### Previous Sepolia contracts
+### Previous Sepolia Contracts
 - 1155 Token Proxy: https://sepolia.etherscan.io/token/0x13364c9D131dC2e0C83Be9D2fD3edb6627536544#code
 - 1155 Token Implementations:
   - `0x62AB1aA5dE5a824969Fa954e57E1655896F48b86`
