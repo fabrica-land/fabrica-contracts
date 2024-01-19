@@ -4,7 +4,7 @@
 
 ### v3.1 Ethereum Mainnet Contracts
 - 1155 Token Proxy: [0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95](https://etherscan.io/token/0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95#readProxyContract)
-- 1155 Token Implementation: `0x43c6eE9D5B2369C5484f69E2Eb3361466855beDd`
+- 1155 Token Implementation: `0xAc060b48bdd8680b7fCcB8563D78e1B85219485B`
 - Validator Proxy: [0x170511f95560A1F280c29026f73a9cD6a4bA8ab0](https://etherscan.io/address/0x170511f95560A1F280c29026f73a9cD6a4bA8ab0#readProxyContract)
 - Validator Implementation: `0x7dEd932Ff0AD55F1D12436A29bCAE846C2115A7C`
 
@@ -77,11 +77,14 @@ Make sure:
 
 ## Archived
 
+### Previous mainnet contracts
+
 ### v3.0 mainnet contracts
 - 1155 Token Proxy: [0xd8A38b46D8cF9813c7c9233B844DD0eC7D7e8750](https://etherscan.io/token/0xd8a38b46d8cf9813c7c9233b844dd0ec7d7e8750#readProxyContract)
 - 1155 Token Implementations:
-  - `0x8E9d55A4cA3EdF7Bf3263F746AF404A2c985EdF7`
-  - `0x58fe23aeb6e7768457fbc1c89f303835a9de2956`
+  - `0x8E9d55A4cA3EdF7Bf3263F746AF404A2c985EdF7` (v3.0)
+  - `0x58fe23aeb6e7768457fbc1c89f303835a9de2956` (v3.0)
+  - `0x43c6eE9D5B2369C5484f69E2Eb3361466855beDd` (v3.1)
 - Validator Proxy: [0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b](https://etherscan.io/address/0x6fa2ee5c9841163e88c85a40b70a90fcd5fbb68b#readProxyContract)
 - Validator Implementation: `0x236fcc678E28e7eE97d83ae926087DC880D1D40D`
 
