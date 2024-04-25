@@ -124,7 +124,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
             }
             return bytes32(uint256(uint160(_property[tokenId].validator)));
         }
-        if (traitKey == bytes32("operatingAgreement")) {
+        if (traitKey == keccak256("operatingAgreement")) {
             if (_property[tokenId].supply == 0) {
                 return bytes32(uint256(uint160(address(0))));
             }
@@ -145,7 +145,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
               values[i] = bytes32(uint256(uint160(_property[tokenId].validator)));
               continue;
           }
-          if (traitKeys[i] == bytes32("operatingAgreement")) {
+          if (traitKeys[i] == keccak256("operatingAgreement")) {
               if (_property[tokenId].supply == 0) {
                   values[i] = bytes32(uint256(uint160(address(0))));
                   continue;
@@ -172,7 +172,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
             updateValidator(address(uint160(bytes20(newValue))), tokenId);
             return;
         }
-        if (traitKey == bytes32("operatingAgreement")) {
+        if (traitKey == keccak256("operatingAgreement")) {
             updateOperatingAgreement(string(abi.encodePacked(newValue)), tokenId);
             return;
         }
@@ -373,7 +373,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         require(_percentOwner(_msgSender(), id, 70), "Only > 70% can update");
         _property[id].operatingAgreement = operatingAgreement;
         emit UpdateOperatingAgreement(id, operatingAgreement);
-        emit TraitUpdated(bytes32("operatingAgreement"), id, bytes32(bytes(operatingAgreement)));
+        emit TraitUpdated(keccak256("operatingAgreement"), id, bytes32(bytes(operatingAgreement)));
         return true;
     }
 
