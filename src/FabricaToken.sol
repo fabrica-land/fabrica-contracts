@@ -167,7 +167,8 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
     // setTrait() defined as part of the ERC-7496 Specification
     function setTrait(uint256 tokenId, bytes32 traitKey, bytes32 newValue) external {
         if (traitKey == bytes32("validator")) {
-            updateValidator(address(uint160(uint(newValue))), tokenId);
+            address validatorAddress = address(uint160(bytes20(newValue)));
+            updateValidator(validatorAddress, tokenId);
             return;
         }
         if (traitKey == bytes32("operatingAgreement")) {
