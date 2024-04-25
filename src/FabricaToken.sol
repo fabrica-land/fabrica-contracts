@@ -118,7 +118,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
 
     // getTraitValue() defined as part of ERC-7496 Specification
     function getTraitValue(uint256 tokenId, bytes32 traitKey) external view returns (bytes32) {
-        if (traitKey == bytes32("validator")) {
+        if (traitKey == keccak256("validator")) {
             if (_property[tokenId].supply == 0) {
                 return bytes32(uint256(uint160(address(0))));
             }
@@ -137,7 +137,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
     function getTraitValues(uint256 tokenId, bytes32[] calldata traitKeys) external view returns (bytes32[] memory) {
         bytes32[] memory values = new bytes32[](traitKeys.length);
         for (uint256 i = 0 ; i < traitKeys.length ; i++) {
-          if (traitKeys[i] == bytes32("validator")) {
+          if (traitKeys[i] == keccak256("validator")) {
               if (_property[tokenId].supply == 0) {
                   values[i] = bytes32(uint256(uint160(address(0))));
                   continue;
@@ -166,9 +166,10 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
 
     // setTrait() defined as part of the ERC-7496 Specification
     function setTrait(uint256 tokenId, bytes32 traitKey, bytes32 newValue) external {
-        if (traitKey == bytes32("validator")) {
-            address validatorAddress = address(uint160(bytes20(newValue)));
-            updateValidator(validatorAddress, tokenId);
+        if (traitKey == keccak256("validator")) {
+            // Convert address passed as bytes32 to an address, which is 20 bytes long and
+            //  fits into a unit160
+            updateValidator(address(uint160(bytes20(newValue))), tokenId);
             return;
         }
         if (traitKey == bytes32("operatingAgreement")) {
@@ -389,7 +390,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         require(_percentOwner(_msgSender(), id, 70), "Only > 70% can update");
         _property[id].validator = validator;
         emit UpdateValidator(id, "validator", validator);
-        emit TraitUpdated(bytes32("validator"), id, bytes32(uint256(uint160(_property[id].validator))));
+        emit TraitUpdated(keccak256("validator"), id, bytes32(uint256(uint160(_property[id].validator))));
         return true;
     }
 
