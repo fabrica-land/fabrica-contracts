@@ -94,13 +94,13 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
 
     // getTraitValue() defined as part of ERC-7496 Specification
     function getTraitValue(uint256 tokenId, bytes32 traitKey) external view returns (bytes32) {
-        if (traitKey == keccak256("Validator Address")) {
+        if (traitKey == keccak256("validator")) {
             if (_property[tokenId].supply == 0) {
                 return bytes32(uint256(uint160(address(0))));
             }
             return bytes32(uint256(uint160(_property[tokenId].validator)));
         }
-        if (traitKey == keccak256("Operating Agreement")) {
+        if (traitKey == keccak256("operatingAgreement")) {
             if (_property[tokenId].supply == 0) {
                 return bytes32(uint256(uint160(address(0))));
             }
@@ -113,7 +113,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
     function getTraitValues(uint256 tokenId, bytes32[] calldata traitKeys) external view returns (bytes32[] memory) {
         bytes32[] memory values = new bytes32[](traitKeys.length);
         for (uint256 i = 0 ; i < traitKeys.length ; i++) {
-          if (traitKeys[i] == keccak256("Validator Address")) {
+          if (traitKeys[i] == keccak256("validator")) {
               if (_property[tokenId].supply == 0) {
                   values[i] = bytes32(uint256(uint160(address(0))));
                   continue;
@@ -121,7 +121,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
               values[i] = bytes32(uint256(uint160(_property[tokenId].validator)));
               continue;
           }
-          if (traitKeys[i] == keccak256("Operating Agreement")) {
+          if (traitKeys[i] == keccak256("operatingAgreement")) {
               if (_property[tokenId].supply == 0) {
                   values[i] = bytes32(uint256(uint160(address(0))));
                   continue;
@@ -137,18 +137,18 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
     // getTraitMetadataURI() defined as part of the ERC-7496 Specification
     function getTraitMetadataURI() external pure returns (string memory) {
         // TODO: Publish metadata declaration at a permanent URL on our API (so we can modify it over time)
-        return "data:application/json;charset=utf-8;base64,ew0KICAidHJhaXRzIjogew0KICAgICJ2YWxpZGF0b3IiOiB7DQogICAgICAiZGlzcGxheU5hbWUiOiAidmFsaWRhdG9yIiwNCiAgICAgICJkYXRhVHlwZSI6IHsNCiAgICAgICAgInR5cGUiOiAic3RyaW5nIiwNCiAgICAgICAgIm1pbkxlbmd0aCI6IDgyLA0KICAgICAgICAibWF4TGVuZ3RoIjogODINCiAgICAgIH0NCiAgICB9DQogIH0NCn0=";
+        return "data:application/json;charset=utf-8;base64,ewogICJ0cmFpdHMiOiB7CiAgICAidmFsaWRhdG9yIjogewogICAgICAiZGlzcGxheU5hbWUiOiAiVmFsaWRhdG9yIEFkZHJlc3MiLAogICAgICAiZGF0YVR5cGUiOiB7CiAgICAgICAgInR5cGUiOiAic3RyaW5nIiwKICAgICAgICAibWluTGVuZ3RoIjogODIsCiAgICAgICAgIm1heExlbmd0aCI6IDgyCiAgICAgIH0KICAgIH0sCiAgICAib3BlcmF0aW5nQWdyZWVtZW50IjogewogICAgICAiZGlzcGxheU5hbWUiOiAiT3BlcmF0aW5nIEFncmVlbWVudCIsCiAgICAgICJkYXRhVHlwZSI6IHsKICAgICAgICAidHlwZSI6ICJzdHJpbmciLAogICAgICAgICJtaW5MZW5ndGgiOiAxCiAgICAgIH0KICAgIH0KICB9Cn0=";
     }
 
     // setTrait() defined as part of the ERC-7496 Specification
     function setTrait(uint256 tokenId, bytes32 traitKey, bytes32 newValue) external {
-        if (traitKey == keccak256("Validator Address")) {
+        if (traitKey == keccak256("validator")) {
             // Convert address passed as bytes32 to an address, which is 20 bytes long and
             //  fits into a unit160
             updateValidator(address(uint160(bytes20(newValue))), tokenId);
             return;
         }
-        if (traitKey == keccak256("Operating Agreement")) {
+        if (traitKey == keccak256("operatingAgreement")) {
             updateOperatingAgreement(string(abi.encodePacked(newValue)), tokenId);
             return;
         }
@@ -348,7 +348,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
     function updateOperatingAgreement(string memory operatingAgreement, uint256 id) public whenNotPaused returns (bool) {
         require(_percentOwner(_msgSender(), id, 70), "Only > 70% can update");
         _property[id].operatingAgreement = operatingAgreement;
-        emit TraitUpdated(keccak256("Operating Agreement"), id, bytes32(bytes(operatingAgreement)));
+        emit TraitUpdated(keccak256("operatingAgreement"), id, bytes32(bytes(operatingAgreement)));
         return true;
     }
 
@@ -364,7 +364,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
     function updateValidator(address validator, uint256 id) public whenNotPaused returns (bool) {
         require(_percentOwner(_msgSender(), id, 70), "Only > 70% can update");
         _property[id].validator = validator;
-        emit TraitUpdated(keccak256("Validator Address"), id, bytes32(uint256(uint160(validator))));
+        emit TraitUpdated(keccak256("validator"), id, bytes32(uint256(uint160(validator))));
         return true;
     }
 
