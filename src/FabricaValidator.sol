@@ -27,6 +27,33 @@ contract FabricaValidator is IFabricaValidator, Initializable, FabricaUUPSUpgrad
     }
 
     string private _baseUri;
+    mapping(string => string) private _operatingAgreementNames;
+
+    event OperatingAgreementNameUpdated(string uri, string name);
+
+    function addOperatingAgreementName(string memory uri_, string memory name) public onlyOwner {
+        require(bytes(_operatingAgreementNames[uri_]).length < 1, "Operating Agreement name record for uri_ already exists");
+        require(bytes(name).length > 0, "name is required");
+        _operatingAgreementNames[uri_] = name;
+        emit OperatingAgreementNameUpdated(uri_, name);
+    }
+
+    function removeOperatingAgreementName(string memory uri_) public onlyOwner {
+        require(bytes(_operatingAgreementNames[uri_]).length > 0, "Operating Agreement name record for uri_ does not exist");
+        delete _operatingAgreementNames[uri_];
+        emit OperatingAgreementNameUpdated(uri_, "");
+    }
+
+    function updateOperatingAgreementName(string memory uri_, string memory name) public onlyOwner {
+        require(bytes(_operatingAgreementNames[uri_]).length > 0, "Operating Agreement name record for uri_ does not exist");
+        require(bytes(name).length > 0, "Use removeOperatingAgreementName");
+        _operatingAgreementNames[uri_] = name;
+        emit OperatingAgreementNameUpdated(uri_, name);
+    }
+
+    function operatingAgreementName(string memory uri_) public view returns (string memory) {
+        return _operatingAgreementNames[uri_];
+    }
 
     function setBaseUri(string memory newBaseUri) public onlyOwner {
         _baseUri = newBaseUri;

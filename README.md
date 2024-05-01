@@ -13,6 +13,8 @@
 - 1155 Token Implementation: `0x35C6F2f49Ee9077B643b25Eba4564927EDAd8957`
 - Validator Proxy: [0xAAA7FDc1A573965a2eD47Ab154332b6b55098008](https://sepolia.etherscan.io/address/0xAAA7FDc1A573965a2eD47Ab154332b6b55098008#readProxyContract)
 - Validator Implementation: `0x45c8958ac130dfe9e474a19f80c158b80388b569`
+- Validator Registry Proxy: [0xb54392209537606F30bC056f3D83d0771A69c9ba](https://sepolia.etherscan.io/token/0xb54392209537606F30bC056f3D83d0771A69c9ba#readProxyContract)
+- Validator Registry Implementation: `0xfb68aebE71E7E425025F88E8795DC34c98a254Fe`
 
 ### Common
 - Null address: `0x0000000000000000000000000000000000000000`
@@ -20,7 +22,7 @@
 ## Deploying Initial Contracts and Proxies
 1. `yarn && yarn rebuild`
 2. Copy and paste the files in folder `custom_flatten/` to Remix.
-3. Use compiler version `v0.8.23+commit.f704f362` with optimization enabled and runs set to 1.
+3. Use compiler version `v0.8.25+commit.b61c2a91` with optimization enabled and runs set to 1.
 4. Validator:
    1. Deploy the `FabricaValidator` contract and verify the source code on Etherscan (be sure to set optimize to true and runs to 1); copy address
    2. Deploy the `FabricaProxy` contract with these constructor arguments, and verify the source code on Etherscan (optimize, 1 run):
