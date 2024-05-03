@@ -10,9 +10,11 @@
 
 ### Sepolia Contracts
 - 1155 Token Proxy: [0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD](https://sepolia.etherscan.io/token/0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD#readProxyContract)
-- 1155 Token Implementation: `0x35C6F2f49Ee9077B643b25Eba4564927EDAd8957`
+- 1155 Token Implementation: `0x578418afb6117330c25dea40a94b8350ad2dbb47`
 - Validator Proxy: [0xAAA7FDc1A573965a2eD47Ab154332b6b55098008](https://sepolia.etherscan.io/address/0xAAA7FDc1A573965a2eD47Ab154332b6b55098008#readProxyContract)
-- Validator Implementation: `0x45c8958ac130dfe9e474a19f80c158b80388b569`
+- Validator Implementation: `0xea409961530b6dfb4b82debad0ba99271bc350d7`
+- Validator Registry Proxy: [0xb54392209537606F30bC056f3D83d0771A69c9ba](https://sepolia.etherscan.io/token/0xb54392209537606F30bC056f3D83d0771A69c9ba#readProxyContract)
+- Validator Registry Implementation: `0xc60657bdd358b95be80266f3b7be15dc856a41b9`
 
 ### Common
 - Null address: `0x0000000000000000000000000000000000000000`
@@ -20,7 +22,7 @@
 ## Deploying Initial Contracts and Proxies
 1. `yarn && yarn rebuild`
 2. Copy and paste the files in folder `custom_flatten/` to Remix.
-3. Use compiler version `v0.8.23+commit.f704f362` with optimization enabled and runs set to 1.
+3. Use compiler version `v0.8.25+commit.b61c2a91` with optimization enabled and runs set to 1.
 4. Validator:
    1. Deploy the `FabricaValidator` contract and verify the source code on Etherscan (be sure to set optimize to true and runs to 1); copy address
    2. Deploy the `FabricaProxy` contract with these constructor arguments, and verify the source code on Etherscan (optimize, 1 run):
@@ -67,6 +69,21 @@ Make sure:
 - Any new initialization logic is in a new initializer with the `reinitialize(nextVersionNumber)` modifier
 - New initializer calls __ClassName_init(); on any new upgradeable contracts that are inherited
 - New initializer is passed to `upgradeToAndCall` as a packed ABI call (see above)
+
+## Onchain Traits Deployment
+- Deploy the validator-registry contract, calling `initialize`
+- Deploy the validator-registry proxy, setting the initial implementation
+- Add the Fabrica v3 Validator name, pointing to the validator proxy
+- Test the `name` method
+- Deploy the new validator implementation, calling `initialize`
+- Call upgradeTo on the validator proxy
+- Add the trust names for each of our operating-agreement versions
+- Test the `operatingAgreementName` method
+- Deploy the new token implementation, calling `initialize`
+- Call `upgradeToAndCall` on the token proxy, calling `initializeV3`
+- Call `setValidatorRegistry` with the address of the registry proxy
+- Call `updateValidator` and `updateOperatingAgreement` on a token
+- Test `getTraitValue` with each, and test `getTraitValues` with both
 
 ## Archived
 

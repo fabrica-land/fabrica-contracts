@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.23;
+pragma solidity ^0.8.25;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -9,10 +9,10 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "./FabricaUUPSUpgradeable.sol";
 import "./IFabricaValidator.sol";
+import "./IFabricaValidatorRegistry.sol";
 
 /**
  * @dev Implementation of the Fabrica ERC1155 multi-token.
@@ -21,7 +21,7 @@ import "./IFabricaValidator.sol";
  *
  * _Available since v3.1._
  */
-contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC1155Upgradeable, IERC1155MetadataURIUpgradeable, OwnableUpgradeable, PausableUpgradeable, FabricaUUPSUpgradeable {
+contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, IERC1155MetadataURIUpgradeable, OwnableUpgradeable, PausableUpgradeable, FabricaUUPSUpgradeable {
     using AddressUpgradeable for address;
 
     constructor() {
@@ -30,36 +30,17 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
 
     function initialize() public initializer {
         __ERC165_init();
-        // __FabricaUUPSUpgradeable_init() calls __Context_init(), so we skip calling that here.
         __FabricaUUPSUpgradeable_init();
         __Ownable_init();
         __Pausable_init();
     }
 
     function initializeV2() public reinitializer(2) {
-        // Mainnet
-        if (_property[5584360490195809515].supply > 0) {
-            _property[5584360490195809515].supply = 0;
-        }
-        if (_property[121246195489681167].supply > 0) {
-            _property[121246195489681167].supply = 0;
-        }
-        // Sepolia
-        if (_property[5713958517081774245].supply > 0) {
-            _property[5713958517081774245].supply = 0;
-        }
-        if (_property[1976155942521829550].supply > 0) {
-            _property[1976155942521829550].supply = 0;
-        }
-        if (_property[16379083226107479501].supply > 0) {
-            _property[16379083226107479501].supply = 0;
-        }
-        if (_property[17173656843293713364].supply > 0) {
-            _property[17173656843293713364].supply = 0;
-        }
-        if (_property[17599246889068243423].supply > 0) {
-            _property[17599246889068243423].supply = 0;
-        }
+        // Token-specific migration code has been removed
+    }
+
+    function initializeV3() public reinitializer(3) {
+        emit TraitMetadataURIUpdated();
     }
 
     // Struct needed to avoid stack too deep error
@@ -82,10 +63,14 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
 
     address private _defaultValidator;
 
+    address private _validatorRegistry;
+
     // On-chain data update
     event UpdateConfiguration(uint256, string newData);
     event UpdateOperatingAgreement(uint256, string newData);
     event UpdateValidator(uint256 tokenId, string dataType, address validator);
+    event TraitMetadataURIUpdated();
+    event TraitUpdated(bytes32 indexed traitKey, uint256 tokenId, bytes32 traitValue);
 
     /**
      * @dev See {IERC165-supportsInterface}.
@@ -94,6 +79,8 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         return
             interfaceId == type(IERC1155Upgradeable).interfaceId ||
             interfaceId == type(IERC1155MetadataURIUpgradeable).interfaceId ||
+            // 0xaf332f3e is ERC-7496
+            interfaceId == 0xaf332f3e ||
             super.supportsInterface(interfaceId);
     }
 
@@ -111,6 +98,48 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
 
     function defaultValidator() public view returns (address) {
         return _defaultValidator;
+    }
+
+    function setValidatorRegistry(address newValidatorRegistry) public onlyOwner {
+        _validatorRegistry = newValidatorRegistry;
+    }
+
+    function validatorRegistry() public view returns (address) {
+        return _validatorRegistry;
+    }
+
+    // getTraitValue() defined as part of ERC-7496 Specification
+    function getTraitValue(uint256 tokenId, bytes32 traitKey) external view returns (bytes32) {
+        if (traitKey == keccak256("validator")) {
+            return bytes32(bytes(_getValidatorName(tokenId)));
+        }
+        if (traitKey == keccak256("operatingAgreement")) {
+            return bytes32(bytes(_getOperatingAgreementName(tokenId)));
+        }
+        revert("Unknown trait key");
+    }
+
+    // getTraitValues() defined as part of ERC-7496 Specification
+    function getTraitValues(uint256 tokenId, bytes32[] calldata traitKeys) external view returns (bytes32[] memory) {
+        bytes32[] memory values = new bytes32[](traitKeys.length);
+        for (uint256 i = 0 ; i < traitKeys.length ; i++) {
+          bytes32 traitKey = traitKeys[i];
+          if (traitKey == keccak256("validator")) {
+              values[i] = bytes32(bytes(_getValidatorName(tokenId)));
+              continue;
+          }
+          if (traitKey == keccak256("operatingAgreement")) {
+              values[i] = bytes32(bytes(_getOperatingAgreementName(tokenId)));
+              continue;
+          }
+          revert(string.concat("Unknown trait key at index ", StringsUpgradeable.toString(i)));
+        }
+        return values;
+    }
+
+    // getTraitMetadataURI() defined as part of the ERC-7496 Specification
+    function getTraitMetadataURI() external pure returns (string memory) {
+        return "data:application/json;charset=utf-8;base64,ewogICJ0cmFpdHMiOiB7CiAgICAidmFsaWRhdG9yIjogewogICAgICAiZGlzcGxheU5hbWUiOiAiVmFsaWRhdG9yIiwKICAgICAgImRhdGFUeXBlIjogewogICAgICAgICJ0eXBlIjogInN0cmluZyIsCiAgICAgICAgIm1pbkxlbmd0aCI6IDEKICAgICAgfQogICAgfSwKICAgICJvcGVyYXRpbmdBZ3JlZW1lbnQiOiB7CiAgICAgICJkaXNwbGF5TmFtZSI6ICJPcGVyYXRpbmcgQWdyZWVtZW50IiwKICAgICAgImRhdGFUeXBlIjogewogICAgICAgICJ0eXBlIjogInN0cmluZyIsCiAgICAgICAgIm1pbkxlbmd0aCI6IDEKICAgICAgfQogICAgfQogIH0KfQ==";
     }
 
     /**
@@ -307,6 +336,7 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         require(_percentOwner(_msgSender(), id, 70), "Only > 70% can update");
         _property[id].operatingAgreement = operatingAgreement;
         emit UpdateOperatingAgreement(id, operatingAgreement);
+        emit TraitUpdated(keccak256("operatingAgreement"), id, bytes32(bytes(_getOperatingAgreementName(id))));
         return true;
     }
 
@@ -323,7 +353,17 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         require(_percentOwner(_msgSender(), id, 70), "Only > 70% can update");
         _property[id].validator = validator;
         emit UpdateValidator(id, "validator", validator);
+        emit TraitUpdated(keccak256("validator"), id, bytes32(bytes(_getValidatorName(id))));
         return true;
+    }
+
+    function _getValidatorName(uint256 tokenId) internal view returns (string memory) {
+        return IFabricaValidatorRegistry(_validatorRegistry).name(_property[tokenId].validator);
+    }
+
+    function _getOperatingAgreementName(uint256 tokenId) internal view returns (string memory) {
+        return IFabricaValidator(_property[tokenId].validator)
+            .operatingAgreementName(_property[tokenId].operatingAgreement);
     }
 
     // @dev `threshold`: percentage threshold
@@ -432,6 +472,9 @@ contract FabricaToken is Initializable, ContextUpgradeable, ERC165Upgradeable, I
         if (property.validator == address(0)) {
             // set default validator address
             property.validator = _defaultValidator;
+        }
+        if (bytes(property.operatingAgreement).length < 1) {
+            property.operatingAgreement = IFabricaValidator(property.validator).defaultOperatingAgreement();
         }
         uint256 id = generateId(_msgSender(), sessionId, property.operatingAgreement);
         require(_property[id].supply == 0, "Session ID already exist, please use a different one");
