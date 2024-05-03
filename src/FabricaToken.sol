@@ -473,6 +473,9 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, 
             // set default validator address
             property.validator = _defaultValidator;
         }
+        if (bytes(property.operatingAgreement).length < 1) {
+            property.operatingAgreement = IFabricaValidator(property.validator).defaultOperatingAgreement();
+        }
         uint256 id = generateId(_msgSender(), sessionId, property.operatingAgreement);
         require(_property[id].supply == 0, "Session ID already exist, please use a different one");
         for (uint256 i = 0; i < recipients.length; i++) {

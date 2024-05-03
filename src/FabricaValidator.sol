@@ -28,8 +28,17 @@ contract FabricaValidator is IFabricaValidator, Initializable, FabricaUUPSUpgrad
 
     string private _baseUri;
     mapping(string => string) private _operatingAgreementNames;
+    string private _defaultOperatingAgreement;
 
     event OperatingAgreementNameUpdated(string uri, string name);
+
+    function setDefaultOperatingAgreement(string memory uri_) public onlyOwner {
+        _defaultOperatingAgreement = uri_;
+    }
+
+    function defaultOperatingAgreement() public view returns (string memory) {
+        return _defaultOperatingAgreement;
+    }
 
     function addOperatingAgreementName(string memory uri_, string memory name) public onlyOwner {
         require(bytes(_operatingAgreementNames[uri_]).length < 1, "Operating Agreement name record for uri_ already exists");

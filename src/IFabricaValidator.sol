@@ -4,6 +4,7 @@
 pragma solidity ^0.8.25;
 
 interface IFabricaValidator {
+    function defaultOperatingAgreement() external view returns (string memory);
     function operatingAgreementName(string memory uri_) external view returns (string memory);
     function uri(uint256 id) external view returns (string memory);
 }
