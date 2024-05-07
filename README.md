@@ -10,7 +10,7 @@
 
 ### Sepolia Contracts
 - 1155 Token Proxy: [0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD](https://sepolia.etherscan.io/token/0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD#readProxyContract)
-- 1155 Token Implementation: `0x349558BBb0dC364Ef7E2006E1BaFd8f705b42fEC`
+- 1155 Token Implementation: `0xBb865345aAb0D2d6Eb93dfE5D4c0a3930c36140B`
 - Validator Proxy: [0xAAA7FDc1A573965a2eD47Ab154332b6b55098008](https://sepolia.etherscan.io/address/0xAAA7FDc1A573965a2eD47Ab154332b6b55098008#readProxyContract)
 - Validator Implementation: `0xea409961530b6dfb4b82debad0ba99271bc350d7`
 - Validator Registry Proxy: [0xb54392209537606F30bC056f3D83d0771A69c9ba](https://sepolia.etherscan.io/token/0xb54392209537606F30bC056f3D83d0771A69c9ba#readProxyContract)
