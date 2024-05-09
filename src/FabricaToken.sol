@@ -139,7 +139,7 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, 
 
     // getTraitMetadataURI() defined as part of the ERC-7496 Specification
     function getTraitMetadataURI() external pure returns (string memory) {
-        return "data:application/json;charset=utf-8;base64,ewogICJ0cmFpdHMiOiB7CiAgICAidmFsaWRhdG9yIjogewogICAgICAiZGlzcGxheU5hbWUiOiAiVmFsaWRhdG9yIiwKICAgICAgImRhdGFUeXBlIjogewogICAgICAgICJ0eXBlIjogInN0cmluZyIsCiAgICAgICAgIm1pbkxlbmd0aCI6IDEKICAgICAgfQogICAgfSwKICAgICJvcGVyYXRpbmdBZ3JlZW1lbnQiOiB7CiAgICAgICJkaXNwbGF5TmFtZSI6ICJPcGVyYXRpbmcgQWdyZWVtZW50IiwKICAgICAgImRhdGFUeXBlIjogewogICAgICAgICJ0eXBlIjogInN0cmluZyIsCiAgICAgICAgIm1pbkxlbmd0aCI6IDEKICAgICAgfQogICAgfQogIH0KfQ==";
+        return "data:application/json;charset=utf-8;base64,ewogICJ0cmFpdHMiOiB7CiAgICAidmFsaWRhdG9yIjogewogICAgICAiZGlzcGxheU5hbWUiOiAiVmFsaWRhdG9yIiwKICAgICAgImRhdGFUeXBlIjogewogICAgICAgICJ0eXBlIjogInN0cmluZyIsCiAgICAgICAgIm1pbkxlbmd0aCI6IDEKICAgICAgfSwKICAgICAgInZhbGlkYXRlT25TYWxlIjogInJlcXVpcmVFcSIKICAgIH0sCiAgICAib3BlcmF0aW5nQWdyZWVtZW50IjogewogICAgICAiZGlzcGxheU5hbWUiOiAiT3BlcmF0aW5nIEFncmVlbWVudCIsCiAgICAgICJkYXRhVHlwZSI6IHsKICAgICAgICAidHlwZSI6ICJzdHJpbmciLAogICAgICAgICJtaW5MZW5ndGgiOiAxCiAgICAgIH0sCiAgICAgICJ2YWxpZGF0ZU9uU2FsZSI6ICJyZXF1aXJlRXEiCiAgICB9CiAgfQp9";
     }
 
     /**
@@ -358,7 +358,12 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, 
     }
 
     function _getValidatorName(uint256 tokenId) internal view returns (string memory) {
-        return IFabricaValidatorRegistry(_validatorRegistry).name(_property[tokenId].validator);
+        string memory validatorName = IFabricaValidatorRegistry(_validatorRegistry).name(_property[tokenId].validator);
+        if (bytes(validatorName).length > 0) {
+            return validatorName;
+        } else {
+            return "Custom";
+        }
     }
 
     function _getOperatingAgreementName(uint256 tokenId) internal view returns (string memory) {
