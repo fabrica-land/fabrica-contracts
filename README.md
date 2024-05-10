@@ -4,9 +4,11 @@
 
 ### Ethereum Mainnet Contracts
 - 1155 Token Proxy: [0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95](https://etherscan.io/token/0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95#readProxyContract)
-- 1155 Token Implementation: `0xAc060b48bdd8680b7fCcB8563D78e1B85219485B`
+- 1155 Token Implementation: `0xd1336777Df7c9cA43842F91EEcf74bD4BE70c477`
 - Validator Proxy: [0x170511f95560A1F280c29026f73a9cD6a4bA8ab0](https://etherscan.io/address/0x170511f95560A1F280c29026f73a9cD6a4bA8ab0#readProxyContract)
-- Validator Implementation: `0x7dEd932Ff0AD55F1D12436A29bCAE846C2115A7C`
+- Validator Implementation: `0x33F1b76603DBf84b2717f17A4ea0CCb2c94fFbF0`
+- Validator Registry Proxy: [0xB5dE693F6fa91D25EFa61BA740F0B4766a8DA6E5](https://sepolia.etherscan.io/token/0xB5dE693F6fa91D25EFa61BA740F0B4766a8DA6E5#readProxyContract)
+- Validator Registry Implementation: `0xBeC03A6C37D985C86F0e6A91ACbdD487B45B259b`
 
 ### Sepolia Contracts
 - 1155 Token Proxy: [0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD](https://sepolia.etherscan.io/token/0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD#readProxyContract)
@@ -71,15 +73,16 @@ Make sure:
 - New initializer is passed to `upgradeToAndCall` as a packed ABI call (see above)
 
 ## Onchain Traits Deployment
-- Deploy the validator-registry contract, calling `initialize`
-- Deploy the validator-registry proxy, setting the initial implementation
+- Deploy and verify the validator-registry contract
+- Deploy and verify the validator-registry proxy, setting the initial implementation and calling `initialize` in the data
 - Add the Fabrica v3 Validator name, pointing to the validator proxy
 - Test the `name` method
-- Deploy the new validator implementation, calling `initialize`
+- Deploy and verify the new validator implementation
 - Call upgradeTo on the validator proxy
 - Add the trust names for each of our operating-agreement versions
 - Test the `operatingAgreementName` method
-- Deploy the new token implementation, calling `initialize`
+- Set and test the default operating agreement
+- Deploy and verify the new token implementation
 - Call `upgradeToAndCall` on the token proxy, calling `initializeV3`
 - Call `setValidatorRegistry` with the address of the registry proxy
 - Call `updateValidator` and `updateOperatingAgreement` on a token
@@ -93,10 +96,25 @@ Make sure:
   - `0x8E9d55A4cA3EdF7Bf3263F746AF404A2c985EdF7`
   - `0x58fe23aeb6e7768457fbc1c89f303835a9de2956`
   - `0x43c6eE9D5B2369C5484f69E2Eb3361466855beDd`
+  - `0xAc060b48bdd8680b7fCcB8563D78e1B85219485B`
 - Validator Proxy: [0x6fA2Ee5C9841163E88c85a40B70a90FCD5FBB68b](https://etherscan.io/address/0x6fa2ee5c9841163e88c85a40b70a90fcd5fbb68b#readProxyContract)
-- Validator Implementation: `0x236fcc678E28e7eE97d83ae926087DC880D1D40D`
+- Validator Implementations:
+  - `0x236fcc678E28e7eE97d83ae926087DC880D1D40D`
+  - `0x7dEd932Ff0AD55F1D12436A29bCAE846C2115A7C`
 
-### Previous Goerli Contracts
+### Previous Sepolia Contracts
+- 1155 Token Proxy: https://sepolia.etherscan.io/token/0x13364c9D131dC2e0C83Be9D2fD3edb6627536544#code
+- 1155 Token Implementations:
+    - `0x62AB1aA5dE5a824969Fa954e57E1655896F48b86`
+    - `0x07e5bd197335c0d452e74c67733402b741a74bd1`
+    - `0x43c6eE9D5B2369C5484f69E2Eb3361466855beDd`
+    - `0x349558BBb0dC364Ef7E2006E1BaFd8f705b42fEC`
+- Validator Proxy: https://sepolia.etherscan.io/address/0x0BC24a5c475232F9d2501fFc52C3685741d6F517#code
+- Validator Implementations:
+    - `0xa991DDB60c5a17f1F022c587c30e65d70a8558cc`
+    - `0x1Bb59487B8A255cd0Cd01e9a0C493e208843860a`
+
+### Previous Goerli Contracts (Goerli is completely deprecated)
 - 1155 Token Proxies:
   - [0xE259e3626E282711DA4d988192cd807DB44CD7a0](https://goerli.etherscan.io/token/0xe259e3626e282711da4d988192cd807db44cd7a0#readProxyContract)
   - [0x2E1feB1efecbadD1aED541eCd251656c23842ec2](https://goerli.etherscan.io/address/0x2e1feb1efecbadd1aed541ecd251656c23842ec2#readProxyContract)
@@ -110,12 +128,3 @@ Make sure:
 - Validator Proxy: [0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F](https://goerli.etherscan.io/address/0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F#readProxyContract)
 - Validator Implementation: `0xeB894D4404e159365173174F3aec5b8B654783D1`
 - Test token ID: `11043966458603065864`
-
-### Previous Sepolia Contracts
-- 1155 Token Proxy: https://sepolia.etherscan.io/token/0x13364c9D131dC2e0C83Be9D2fD3edb6627536544#code
-- 1155 Token Implementations:
-  - `0x62AB1aA5dE5a824969Fa954e57E1655896F48b86`
-  - `0x07e5bd197335c0d452e74c67733402b741a74bd1`
-  - `0x43c6eE9D5B2369C5484f69E2Eb3361466855beDd`
-- Validator Proxy: https://sepolia.etherscan.io/address/0x0BC24a5c475232F9d2501fFc52C3685741d6F517#code
-- Validator Implementation: https://sepolia.etherscan.io/address/0xa991DDB60c5a17f1F022c587c30e65d70a8558cc#code
