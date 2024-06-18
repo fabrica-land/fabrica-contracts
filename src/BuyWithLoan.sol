@@ -43,32 +43,25 @@ contract BuyWithLoan is IBuyWithLoan {
         bytes calldata loanOptions
     ) external {
         require(IERC20(orderParams.considerationToken).balanceOf(msg.sender) >= downPayment, "Operator does not have sufficient consideration");
+        require(orderParams.offerToken == fabricaTokenAddress, "Order must be for a Fabrica token");
+        uint256 additionalAmount = 0;
+        for (uint256 i = 0 ; i < orderParams.additionalRecipients.length ; i++) {
+            additionalAmount = additionalAmount + orderParams.additionalRecipients[i].amount;
+        }
+        require(
+            loanAmount + downPayment == orderParams.considerationAmount + additionalAmount,
+            "loanAmount plus downPayment must equal considerationAmount in offer, plus fees"
+        );
         // 1) Take out Aave Flash Loan
-        bytes memory params = abi.encodePacked(
-            orderParams.considerationToken,
-            orderParams.considerationAmount,
-            orderParams.offerer,
-            orderParams.zone,
-            orderParams.offerIdentifier,
-            orderParams.offerAmount,
-            orderParams.basicOrderType,
-            orderParams.startTime,
-            orderParams.endTime,
-            orderParams.zoneHash,
-            orderParams.salt,
-            orderParams.offererConduitKey,
-            orderParams.fulfillerConduitKey,
-            orderParams.totalOriginalAdditionalRecipients,
+        bytes memory params = abi.encode(
+            orderParams,
             downPayment,
             loanAmount,
             loanDuration,
             maxRepayment,
             loanTicks,
-            uint64(orderParams.signature.length),
-            bytes.concat(orderParams.signature, loanOptions)
+            loanOptions
         );
-        require(orderParams.offerToken == fabricaTokenAddress, "Order must be for a Fabrica token");
-        require(loanAmount + downPayment == orderParams.considerationAmount, "loanAmount plus downPayment must equal considerationAmount in offer");
         IAavePool(aaveFlashLoanAddress).flashLoanSimple(
             msg.sender,
             orderParams.considerationToken,
@@ -81,77 +74,34 @@ contract BuyWithLoan is IBuyWithLoan {
 
     function executeOperation(bytes calldata params) public {
         (
-            address considerationToken,
-            uint256 considerationAmount,
-            address payable offerer,
-            address zone,
-            uint256 offerIdentifier,
-            uint256 offerAmount,
-            ISeaport.BasicOrderType basicOrderType,
-            uint256 startTime,
-            uint256 endTime,
-            bytes32 zoneHash,
-            uint256 salt,
-            bytes32 offererConduitKey,
-            bytes32 fulfillerConduitKey,
+            ISeaport.BasicOrderParameters memory orderParams,
             uint256 downPayment,
             uint256 loanAmount,
             uint64 loanDuration,
             uint256 maxRepayment,
             uint128[] memory loanTicks,
-            uint64 signatureSize,
-            bytes memory signatureAndLoanOptions
+            bytes memory loanOptions
         ) = abi.decode(
             params,
             (
-                address,
-                uint256,
-                address,
-                address,
-                uint256,
-                uint256,
-                ISeaport.BasicOrderType,
-                uint256,
-                uint256,
-                bytes32,
-                uint256,
-                bytes32,
-                bytes32,
+                ISeaport.BasicOrderParameters,
                 uint256,
                 uint256,
                 uint64,
                 uint256,
                 uint128[],
-                uint64,
                 bytes
             )
         );
-        bytes memory signature = BytesLib.slice(
-            signatureAndLoanOptions, 0, signatureSize);
-        bytes memory loanOptions = BytesLib.slice(
-            signatureAndLoanOptions, signatureSize, signatureAndLoanOptions.length);
-        require(loanAmount + downPayment == considerationAmount, "loanAmount plus downPayment must equal considerationAmount in offer");
-        // 2) Buy the Fabrica token
-        ISeaport.BasicOrderParameters memory orderParams = ISeaport.BasicOrderParameters(
-            considerationToken,
-            0,
-            considerationAmount,
-            offerer,
-            zone,
-            fabricaTokenAddress,
-            offerIdentifier,
-            offerAmount,
-            basicOrderType,
-            startTime,
-            endTime,
-            zoneHash,
-            salt,
-            offererConduitKey,
-            fulfillerConduitKey,
-            0,
-            new ISeaport.AdditionalRecipient[](0),
-            signature
+        uint256 additionalAmount = 0;
+        for (uint256 i = 0 ; i < orderParams.additionalRecipients.length ; i++) {
+            additionalAmount = additionalAmount + orderParams.additionalRecipients[i].amount;
+        }
+        require(
+            loanAmount + downPayment == orderParams.considerationAmount + additionalAmount,
+            "loanAmount plus downPayment must equal considerationAmount in offer, plus fees"
         );
+        // 2) Buy the Fabrica token
         if (!ISeaport(seaportAddress).fulfillBasicOrder(orderParams)) {
             revert("Seaport order failed to be fulfilled.");
         }
