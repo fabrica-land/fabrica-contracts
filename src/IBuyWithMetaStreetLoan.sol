@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 
 import {ISeaport} from "./ISeaport.sol";
 
-interface IBuyWithLoan {
+interface IBuyWithMetaStreetLoan {
     function buyWithLoan(
         ISeaport.BasicOrderParameters calldata orderParams,
         uint256 downPayment,

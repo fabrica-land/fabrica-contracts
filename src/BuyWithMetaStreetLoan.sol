@@ -6,12 +6,12 @@ import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {BytesLib} from "./BytesLib.sol";
 import {IAavePool} from "./IAavePool.sol";
-import {IBuyWithLoan} from "./IBuyWithLoan.sol";
+import {IBuyWithMetaStreetLoan} from "./IBuyWithMetaStreetLoan.sol";
 import {IMetaStreetPool} from "./IMetaStreetPool.sol";
 import {IMetaStreetCollateralWrapper} from "./IMetaStreetCollateralWrapper.sol";
 import {ISeaport} from "./ISeaport.sol";
 
-contract BuyWithLoan is IBuyWithLoan {
+contract BuyWithMetaStreetLoan is IBuyWithMetaStreetLoan {
 
     address public aaveFlashLoanAddress;
     address public collateralWrapperAddress;
