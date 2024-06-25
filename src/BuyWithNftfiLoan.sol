@@ -2,28 +2,28 @@
 
 pragma solidity ^0.8.25;
 
-import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {AaveFlashLoanSimpleReceiverBase} from "./AaveFlashLoanSimpleReceiverBase.sol";
 import {BytesLib} from "./BytesLib.sol";
 import {IAavePool} from "./IAavePool.sol";
+import {IAavePoolAddressesProvider} from './IAavePoolAddressesProvider.sol';
 import {IBuyWithNftfiLoan} from "./IBuyWithNftfiLoan.sol";
-import {ISeaport} from "./ISeaport.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {INftfiDirectLoanFixedOffer} from "./INftfiDirectLoanFixedOffer.sol";
+import {ISeaport} from "./ISeaport.sol";
 
-contract BuyWithNftfiLoan is IBuyWithNftfiLoan {
+contract BuyWithNftfiLoan is IBuyWithNftfiLoan, AaveFlashLoanSimpleReceiverBase {
 
-    address public aaveFlashLoanAddress;
-    address public nftfiLoanAddress;
-    address public seaportAddress;
+    INftfiDirectLoanFixedOffer public immutable NFTFI_DIRECT_LOAN;
+    ISeaport public immutable SEAPORT;
 
     constructor(
-        address aaveFlashLoanAddress_,
-        address nftfiLoanAddress_,
-        address seaportAddress_
-    ) {
-        aaveFlashLoanAddress = aaveFlashLoanAddress_;
-        nftfiLoanAddress = nftfiLoanAddress_;
-        seaportAddress = seaportAddress_;
+        address aavePoolAddressesProviderAddress,
+        address nftfiLoanAddress,
+        address seaportAddress
+    ) AaveFlashLoanSimpleReceiverBase(IAavePoolAddressesProvider(aavePoolAddressesProviderAddress)) {
+        NFTFI_DIRECT_LOAN = INftfiDirectLoanFixedOffer(nftfiLoanAddress);
+        SEAPORT = ISeaport(seaportAddress);
     }
 
     function buyWithLoan(
@@ -34,7 +34,7 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan {
     ) external {
         require(offer.loanERC20Denomination == orderParams.considerationToken, "Order consideration token does not match loan-offer denomination");
         require(offer.nftCollateralContract == orderParams.offerToken, "Order offer token does not match loan-offer collateral token");
-        uint256 flashLoanInterest = offer.loanPrincipalAmount * IAavePool(aaveFlashLoanAddress).FLASHLOAN_PREMIUM_TOTAL();
+        uint256 flashLoanInterest = offer.loanPrincipalAmount * POOL.FLASHLOAN_PREMIUM_TOTAL() / 10000;
         uint256 downPayment = orderParams.considerationAmount - offer.loanPrincipalAmount;
         uint256 additionalAmount = 0;
         for (uint256 i = 0 ; i < orderParams.additionalRecipients.length ; i++) {
@@ -49,7 +49,7 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan {
             signature,
             borrowerSettings
         );
-        IAavePool(aaveFlashLoanAddress).flashLoanSimple(
+        POOL.flashLoanSimple(
             msg.sender,
             orderParams.considerationToken,
             offer.loanPrincipalAmount,
@@ -65,7 +65,8 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan {
         uint256 premium,
         address initiator,
         bytes calldata params
-    ) public {
+    ) public override returns (bool) {
+        require(initiator == msg.sender, "Flash-loan initiator must be the operator");
         (
             ISeaport.BasicOrderParameters memory orderParams,
             INftfiDirectLoanFixedOffer.Offer memory offer,
@@ -81,20 +82,19 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan {
             )
         );
         require(asset == orderParams.considerationToken, "Flash-loan asset must equal the order's consideration token");
-        require(premium == offer.loanPrincipalAmount, "Flash-loan amount must equal the loan offer's principal amount");
-        require(initiator == msg.sender(), "Flash-loan initiator must be the operator");
+        require(amount == offer.loanPrincipalAmount, "Flash-loan amount must equal the loan offer's principal amount");
         // 2) Buy the Fabrica token
-        if (!ISeaport(seaportAddress).fulfillBasicOrder(orderParams)) {
+        if (SEAPORT.fulfillBasicOrder(orderParams)) {
             revert("Seaport order failed to be fulfilled.");
         }
         // 3) Take out the NFTfi loan
-        uint256 loanTotalWithFlashFee = offer.loanPrincipalAmount + premium;
-        INftfiDirectLoanFixedOffer(nftfiLoanAddress).acceptOffer(
+        NFTFI_DIRECT_LOAN.acceptOffer(
             offer,
             signature,
             borrowerSettings
         );
         // 4) Approve repayment of the Aave Flash Loan
-        IERC20(orderParams.considerationToken).approve(aaveFlashLoanAddress, loanTotalWithFlashFee);
+        IERC20(orderParams.considerationToken).approve(ADDRESSES_PROVIDER.getPool(), amount + premium);
+        return true;
     }
 }

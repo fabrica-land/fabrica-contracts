@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
  * @author Aave
  * @notice Defines the basic interface for a Pool Addresses Provider.
  */
-interface IPoolAddressesProvider {
+interface IAavePoolAddressesProvider {
     /**
      * @dev Emitted when the market identifier is updated.
    * @param oldMarketId The old id of the market

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import {IPoolAddressesProvider} from './IAavePoolAddressesProvider.sol';
+import {IAavePoolAddressesProvider} from './IAavePoolAddressesProvider.sol';
 import {DataTypes} from './AaveDataTypes.sol';
 
 /**
@@ -618,7 +618,7 @@ interface IAavePool {
      * @notice Returns the PoolAddressesProvider connected to this contract
    * @return The address of the PoolAddressesProvider
    */
-    function ADDRESSES_PROVIDER() external view returns (IPoolAddressesProvider);
+    function ADDRESSES_PROVIDER() external view returns (IAavePoolAddressesProvider);
 
     /**
      * @notice Updates the protocol fee on the bridging

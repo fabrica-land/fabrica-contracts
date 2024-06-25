@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.25;
 
-import {ISeaport} from "./ISeaport.sol";
 import {INftfiDirectLoanFixedOffer} from "./INftfiDirectLoanFixedOffer.sol";
+import {ISeaport} from "./ISeaport.sol";
 
 interface IBuyWithNftfiLoan {
     function buyWithLoan(
