@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.25;
 
-import {IAavePoolAddressesProvider} from './IAavePoolAddressesProvider.sol';
-import {IAavePool} from './IAavePool.sol';
+import {IAavePool} from "./IAavePool.sol";
+import {IAavePoolAddressesProvider} from "./IAavePoolAddressesProvider.sol";
 
 /**
  * @title IFlashLoanSimpleReceiver

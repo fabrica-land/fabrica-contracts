@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.25;
 
-import {ISeaport} from "./ISeaport.sol";
+import {ISeaport} from "../seaport/ISeaport.sol";
 
 interface IBuyWithMetaStreetLoan {
     function buyWithLoan(

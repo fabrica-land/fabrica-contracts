@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.25;
 
-import {IAavePoolAddressesProvider} from './IAavePoolAddressesProvider.sol';
-import {DataTypes} from './AaveDataTypes.sol';
+import {DataTypes} from "./AaveDataTypes.sol";
+import {IAavePoolAddressesProvider} from "./IAavePoolAddressesProvider.sol";
 
 /**
  * @title IPool
