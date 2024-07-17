@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 /**
  * @title  LoanData
  * @author NFTfi
- * @notice An interface containg the main Loan struct shared by Direct Loans types.
+ * @notice An interface containing the main Loan struct shared by Direct Loans types.
  */
 interface LoanData {
     /* ********** */
@@ -29,7 +29,7 @@ interface LoanData {
      * @param loanDuration - The amount of time (measured in seconds) that can elapse before the lender can liquidate
      * the loan and seize the underlying collateral NFT.
      * @param loanInterestRateForDurationInBasisPoints - This is the interest rate (measured in basis points, e.g.
-     * hundreths of a percent) for the loan, that must be repaid pro-rata by the borrower at the conclusion of the loan
+     * hundredths of a percent) for the loan, that must be repaid pro-rata by the borrower at the conclusion of the loan
      * or risk seizure of their nft collateral. Note if the type of the loan is fixed then this value  is not used and
      * is irrelevant so it should be set to 0.
      * @param loanAdminFeeInBasisPoints - The percent (measured in basis points) of the interest earned that will be

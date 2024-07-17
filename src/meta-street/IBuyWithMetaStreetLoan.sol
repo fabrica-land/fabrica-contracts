@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {ISeaport} from "../seaport/ISeaport.sol";
+import {Order} from "../seaport/ConsiderationStructs.sol";
 
 interface IBuyWithMetaStreetLoan {
     function buyWithLoan(
-        ISeaport.BasicOrderParameters calldata orderParams,
+        Order calldata order,
         uint256 downPayment,
         uint256 loanAmount,
         uint64 loanDuration,

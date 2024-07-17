@@ -10,134 +10,142 @@ import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Re
 import {ERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
 import {Strings} from  "@openzeppelin/contracts/utils/Strings.sol";
 
-import {AaveFlashLoanSimpleReceiverBase, IAaveFlashLoanSimpleReceiver} from "../aave/AaveFlashLoanSimpleReceiverBase.sol";
-import {IAavePool} from "../aave/IAavePool.sol";
-import {IAavePoolAddressesProvider} from "../aave/IAavePoolAddressesProvider.sol";
-import {ISeaport} from "../seaport/ISeaport.sol";
+import {Account, Actions, ISoloMargin} from "../dydx/ISoloMargin.sol";
+import {DydxFlashloanBase} from "../dydx/DydxFlashloanBase.sol";
+import {ICallee} from "../dydx/ICallee.sol";
+import {ConsiderationInterface} from "../seaport/ConsiderationInterface.sol";
+import {Order} from "../seaport/ConsiderationStructs.sol";
 
 import {IBuyWithNftfiLoan} from "./IBuyWithNftfiLoan.sol";
 import {IDirectLoanCoordinator} from "./IDirectLoanCoordinator.sol";
 import {INftfiDirectLoanFixedOffer} from "./INftfiDirectLoanFixedOffer.sol";
 import {INftfiHub} from "./INftfiHub.sol";
 
-contract BuyWithNftfiLoan is IBuyWithNftfiLoan, AaveFlashLoanSimpleReceiverBase, IERC165, ERC165, IERC721Receiver, ERC1155Receiver {
+contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver, ERC1155Receiver, ICallee, DydxFlashloanBase {
 
+    ISoloMargin public immutable DYDX_SOLO_MARGIN;
     INftfiDirectLoanFixedOffer public immutable NFTFI_DIRECT_LOAN;
     IDirectLoanCoordinator public immutable NFTFI_DIRECT_LOAN_COORDINATOR;
-    ISeaport public immutable SEAPORT;
+    ConsiderationInterface public immutable SEAPORT;
+
+    mapping(address => bool) public tokenFlashloanable;
+    mapping(address => uint256) public marketIds;
+
+    struct CallParams {
+        address purchaser;
+        Order order;
+        INftfiDirectLoanFixedOffer.Offer offer;
+        INftfiDirectLoanFixedOffer.Signature signature;
+        INftfiDirectLoanFixedOffer.BorrowerSettings borrowerSettings;
+    }
 
     constructor(
-        address aavePoolAddressesProviderAddress,
+        address dydxSoloMarginAddress,
         address nftfiLoanAddress,
         address seaportAddress
-    ) AaveFlashLoanSimpleReceiverBase(IAavePoolAddressesProvider(aavePoolAddressesProviderAddress)) {
+    ) {
+        DYDX_SOLO_MARGIN = ISoloMargin(dydxSoloMarginAddress);
         NFTFI_DIRECT_LOAN = INftfiDirectLoanFixedOffer(nftfiLoanAddress);
         INftfiHub nftfiHub = INftfiHub(NFTFI_DIRECT_LOAN.hub());
         NFTFI_DIRECT_LOAN_COORDINATOR = IDirectLoanCoordinator(nftfiHub.getContract(NFTFI_DIRECT_LOAN.LOAN_COORDINATOR()));
-        SEAPORT = ISeaport(seaportAddress);
-    }
-
-    // Modifier to restrict access to the Pool
-    modifier onlyPool() {
-        require(msg.sender == address(POOL), "Caller is not the Pool");
-        _;
+        SEAPORT = ConsiderationInterface(seaportAddress);
+        for (uint256 i; i <= 3; ++i) {
+            address tokenAddress = DYDX_SOLO_MARGIN.getMarketTokenAddress(i);
+            tokenFlashloanable[tokenAddress] = true;
+            marketIds[tokenAddress] = i;
+        }
     }
 
     function calculateFlashLoanInterest(
-        INftfiDirectLoanFixedOffer.Offer memory offer
-    ) public override view returns (uint256) {
-        return offer.loanPrincipalAmount * POOL.FLASHLOAN_PREMIUM_TOTAL() / 10000;
+        uint256 loanPrincipalAmount
+    ) public override pure returns (uint256) {
+        uint256 repaymentAmount = _getRepaymentAmountInternal(loanPrincipalAmount);
+        return repaymentAmount - repaymentAmount;
     }
 
     function buyWithLoan(
-        ISeaport.BasicOrderParameters calldata orderParams,
+        Order calldata order,
         INftfiDirectLoanFixedOffer.Offer calldata offer,
         INftfiDirectLoanFixedOffer.Signature calldata signature,
         INftfiDirectLoanFixedOffer.BorrowerSettings calldata borrowerSettings
     ) external override {
-        require(offer.loanERC20Denomination == orderParams.considerationToken, "Order consideration token does not match loan-offer denomination");
-        require(offer.nftCollateralContract == orderParams.offerToken, "Order offer token does not match loan-offer collateral token");
-        uint256 flashLoanInterest = calculateFlashLoanInterest(offer);
-        uint256 downPayment = orderParams.considerationAmount - offer.loanPrincipalAmount;
+        require(order.parameters.offer.length == 1, "Only single-token orders are supported by this contract");
+        require(tokenFlashloanable[order.parameters.consideration[0].token], "Consideration token not supported by flash-loan provider");
+        uint256 totalConsideration = 0;
+        require(order.parameters.consideration.length >= 1, "At least one consideration must be present in the order");
+        for (uint256 i = 0; i < order.parameters.consideration.length; i++) {
+            require(offer.loanERC20Denomination == order.parameters.consideration[i].token, "All order consideration token must match loan-offer denomination");
+            require(order.parameters.consideration[i].startAmount == order.parameters.consideration[i].endAmount, "ERC20 auctions are not supported by this contract");
+            totalConsideration = totalConsideration + order.parameters.consideration[i].startAmount;
+        }
+        require(offer.nftCollateralContract == order.parameters.offer[0].token, "Order offer token does not match loan-offer collateral token");
+        uint256 flashLoanInterest = calculateFlashLoanInterest(offer.loanPrincipalAmount);
+        uint256 flashLoanRepayment = offer.loanPrincipalAmount + flashLoanInterest;
+        uint256 downPayment = totalConsideration - offer.loanPrincipalAmount;
         uint256 totalRequiredFromPurchaser = downPayment + flashLoanInterest;
-        IERC20 considerationToken = IERC20(orderParams.considerationToken);
+        IERC20 considerationToken = IERC20(order.parameters.consideration[0].token);
         require(considerationToken.balanceOf(msg.sender) >= totalRequiredFromPurchaser, "Purchaser does not have sufficient consideration to make the down payment plus flash-loan fees");
         uint256 allowance = considerationToken.allowance(msg.sender, address(this));
         require(
             allowance >= totalRequiredFromPurchaser,
             string.concat("Purchaser has not approved sufficient ERC20 transfer to this contract to complete the purchase; allowance:", Strings.toString(allowance))
         );
-        // 1) Take out Aave Flash Loan
-        bytes memory params = abi.encode(
-            msg.sender,
-            orderParams,
-            offer,
-            signature,
-            borrowerSettings
-        );
-        POOL.flashLoanSimple(
-            address(this),
-            offer.loanERC20Denomination,
-            offer.loanPrincipalAmount,
-            params,
-            0
-        );
-        // Next steps are in executeOperation()
+        // 1) Take out DyDx Flash Loan
+        uint256 marketId = marketIds[order.parameters.consideration[0].token];
+        Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](3);
+        actions[0] = _getWithdrawAction(marketId, offer.loanPrincipalAmount);
+        actions[1] = _getCallAction(abi.encode(CallParams({
+            purchaser: msg.sender,
+            order: order,
+            offer: offer,
+            signature: signature,
+            borrowerSettings: borrowerSettings
+        })));
+        actions[2] = _getDepositAction(marketId, flashLoanRepayment);
+        Account.Info[] memory accountInfos = new Account.Info[](1);
+        accountInfos[0] = _getAccountInfo();
+        DYDX_SOLO_MARGIN.operate(accountInfos, actions);
+        // Next steps are in callFunction()
     }
 
-    function executeOperation(
-        address asset,
-        uint256 amount,
-        uint256 premium,
-        address initiator,
-        bytes calldata params
-    ) external override onlyPool returns (bool) {
-        require(initiator == address(this), "Flash-loan initiator must be this contract");
-        (
-            address purchaser,
-            ISeaport.BasicOrderParameters memory orderParams,
-            INftfiDirectLoanFixedOffer.Offer memory offer,
-            INftfiDirectLoanFixedOffer.Signature memory signature,
-            INftfiDirectLoanFixedOffer.BorrowerSettings memory borrowerSettings
-        ) = abi.decode(
-            params,
-            (
-                address,
-                ISeaport.BasicOrderParameters,
-                INftfiDirectLoanFixedOffer.Offer,
-                INftfiDirectLoanFixedOffer.Signature,
-                INftfiDirectLoanFixedOffer.BorrowerSettings
-            )
-        );
-        require(amount == offer.loanPrincipalAmount, "Flash-loan amount must equal the loan offer's principal amount");
-        require(asset == orderParams.considerationToken, "Flash-loan asset must equal the order's consideration token");
-        require(asset == offer.loanERC20Denomination, "Flash-loan asset must equal the loan-offer denomination");
-        require(offer.nftCollateralContract == orderParams.offerToken, "Order offer token does not match loan-offer collateral token");
-        uint256 flashLoanInterest = calculateFlashLoanInterest(offer);
-        require(premium == flashLoanInterest, "Aave's calculated premium doesn't equal ours based on the FLASHLOAN_PREMIUM_TOTAL");
-        uint256 downPayment = orderParams.considerationAmount - offer.loanPrincipalAmount;
+    function callFunction(
+        address sender,
+        Account.Info calldata accountInfo,
+        bytes calldata data
+    ) external override {
+        require(msg.sender == address(DYDX_SOLO_MARGIN), "Only the dYdX SoloMargin contract can call this function");
+        require(sender == address(this), "Flash-loan initiator must be this contract");
+        CallParams memory params = abi.decode(data, (CallParams));
+        require(params.offer.nftCollateralContract == params.order.parameters.offer[0].token, "Order offer token does not match loan-offer collateral token");
+        uint256 flashLoanInterest = calculateFlashLoanInterest(params.offer.loanPrincipalAmount);
+        uint256 totalConsideration = 0;
+        require(params.order.parameters.consideration.length >= 1, "At least one consideration must be present in the order");
+        for (uint256 i = 0; i < params.order.parameters.consideration.length; i++) {
+            totalConsideration = totalConsideration + params.order.parameters.consideration[i].startAmount;
+        }
+        uint256 downPayment = totalConsideration - params.offer.loanPrincipalAmount;
         uint256 totalRequiredFromPurchaser = downPayment + flashLoanInterest;
-        IERC20 considerationToken = IERC20(orderParams.considerationToken);
-        require(considerationToken.balanceOf(purchaser) >= totalRequiredFromPurchaser, "Purchaser does not have sufficient consideration to make the down payment plus flash-loan fees");
-        require(considerationToken.allowance(purchaser, address(this)) >= totalRequiredFromPurchaser, "Purchaser has not approved sufficient ERC20 transfer to this contract to complete the purchase");
+        IERC20 considerationToken = IERC20(params.order.parameters.consideration[0].token);
+        require(considerationToken.balanceOf(params.purchaser) >= totalRequiredFromPurchaser, "Purchaser does not have sufficient consideration to make the down payment plus flash-loan fees");
+        require(considerationToken.allowance(params.purchaser, address(this)) >= totalRequiredFromPurchaser, "Purchaser has not approved sufficient ERC20 transfer to this contract to complete the purchase");
         // 2) Take the down-payment plus flash-loan fee from the purchaser
-        if (!considerationToken.transferFrom(purchaser, address(this), totalRequiredFromPurchaser)) {
+        if (!considerationToken.transferFrom(params.purchaser, address(this), totalRequiredFromPurchaser)) {
             revert("Failed to transfer required funds from purchaser");
         }
         // 3) Allow Seaport to transfer the required funds from this contract to complete the purchase
-        if (!considerationToken.approve(address(SEAPORT), orderParams.considerationAmount)) {
+        if (!considerationToken.approve(address(SEAPORT), totalConsideration)) {
             revert("Failed to approve ERC20 transfer from this contract to Seaport");
         }
         // 4) Buy the Fabrica token
-        if (!SEAPORT.fulfillBasicOrder(orderParams)) {
+        if (!SEAPORT.fulfillOrder(params.order, 0)) {
             revert("Seaport order failed to be fulfilled.");
         }
         // 5) Take out the NFTfi loan
-        IERC1155(offer.nftCollateralContract).setApprovalForAll(address(NFTFI_DIRECT_LOAN), true);
+        IERC1155(params.offer.nftCollateralContract).setApprovalForAll(address(NFTFI_DIRECT_LOAN), true);
         uint32 loanId = NFTFI_DIRECT_LOAN.acceptOffer(
-            offer,
-            signature,
-            borrowerSettings
+            params.offer,
+            params.signature,
+            params.borrowerSettings
         );
         // 7) Mint the obligation receipt
         NFTFI_DIRECT_LOAN.mintObligationReceipt(loanId);
@@ -145,18 +153,17 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, AaveFlashLoanSimpleReceiverBase,
         IDirectLoanCoordinator.Loan memory loan = NFTFI_DIRECT_LOAN_COORDINATOR.getLoanData(loanId);
         IERC721(NFTFI_DIRECT_LOAN_COORDINATOR.obligationReceiptToken()).transferFrom(
             address(this),
-            purchaser,
+            params.purchaser,
             loan.smartNftId
         );
         // 8) Approve repayment of the flash loan
-        uint256 flashLoanRepayment = offer.loanPrincipalAmount + flashLoanInterest;
-        considerationToken.approve(address(POOL), flashLoanRepayment);
-        return true;
+        uint256 flashLoanRepayment = params.offer.loanPrincipalAmount + flashLoanInterest;
+        considerationToken.approve(address(DYDX_SOLO_MARGIN), flashLoanRepayment);
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165, ERC1155Receiver) returns (bool) {
         return
-            interfaceId == type(IAaveFlashLoanSimpleReceiver).interfaceId
+            interfaceId == type(ICallee).interfaceId
             || interfaceId == type(IERC721Receiver).interfaceId
             || ERC1155Receiver.supportsInterface(interfaceId);
     }
