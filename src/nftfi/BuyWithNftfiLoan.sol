@@ -60,7 +60,11 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver
         uint256 loanPrincipalAmount
     ) public override pure returns (uint256) {
         uint256 repaymentAmount = _getRepaymentAmountInternal(loanPrincipalAmount);
+<<<<<<< Updated upstream
         return loanPrincipalAmount - repaymentAmount;
+=======
+        return repaymentAmount - loanPrincipalAmount;
+>>>>>>> Stashed changes
     }
 
     function buyWithLoan(
