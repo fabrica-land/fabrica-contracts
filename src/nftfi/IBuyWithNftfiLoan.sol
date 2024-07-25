@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.26;
 
 import {Order} from "../seaport/ConsiderationStructs.sol";
 
@@ -12,6 +12,7 @@ interface IBuyWithNftfiLoan {
     ) external view returns (uint256);
 
     function buyWithLoan(
+        address receiver,
         Order calldata order,
         INftfiDirectLoanFixedOffer.Offer calldata offer,
         INftfiDirectLoanFixedOffer.Signature calldata signature,
