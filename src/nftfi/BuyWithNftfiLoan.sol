@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.26;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC165, IERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
@@ -32,7 +32,8 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver
     mapping(address => uint256) public marketIds;
 
     struct CallParams {
-        address purchaser;
+        address operator;
+        address receiver;
         Order order;
         INftfiDirectLoanFixedOffer.Offer offer;
         INftfiDirectLoanFixedOffer.Signature signature;
@@ -64,6 +65,7 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver
     }
 
     function buyWithLoan(
+        address receiver,
         Order calldata order,
         INftfiDirectLoanFixedOffer.Offer calldata offer,
         INftfiDirectLoanFixedOffer.Signature calldata signature,
@@ -81,21 +83,21 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver
         require(offer.nftCollateralContract == order.parameters.offer[0].token, "Order offer token does not match loan-offer collateral token");
         uint256 flashLoanInterest = calculateFlashLoanInterest(offer.loanPrincipalAmount);
         uint256 flashLoanRepayment = offer.loanPrincipalAmount + flashLoanInterest;
-        uint256 downPayment = totalConsideration - offer.loanPrincipalAmount;
-        uint256 totalRequiredFromPurchaser = downPayment + flashLoanInterest;
+        uint256 totalRequiredFromOperator = totalConsideration - offer.loanPrincipalAmount + flashLoanInterest;
         IERC20 considerationToken = IERC20(order.parameters.consideration[0].token);
-        require(considerationToken.balanceOf(msg.sender) >= totalRequiredFromPurchaser, "Purchaser does not have sufficient consideration to make the down payment plus flash-loan fees");
+        require(considerationToken.balanceOf(msg.sender) >= totalRequiredFromOperator, "Operator does not have sufficient consideration to make the down payment plus flash-loan fees");
         uint256 allowance = considerationToken.allowance(msg.sender, address(this));
         require(
-            allowance >= totalRequiredFromPurchaser,
-            string.concat("Purchaser has not approved sufficient ERC20 transfer to this contract to complete the purchase; allowance:", Strings.toString(allowance))
+            allowance >= totalRequiredFromOperator,
+            string.concat("Operator has not approved sufficient ERC20 transfer to this contract to complete the purchase; allowance:", Strings.toString(allowance))
         );
         // 1) Take out DyDx Flash Loan
         uint256 marketId = marketIds[order.parameters.consideration[0].token];
         Actions.ActionArgs[] memory actions = new Actions.ActionArgs[](3);
         actions[0] = _getWithdrawAction(marketId, offer.loanPrincipalAmount);
         actions[1] = _getCallAction(abi.encode(CallParams({
-            purchaser: msg.sender,
+            operator: msg.sender,
+            receiver: receiver,
             order: order,
             offer: offer,
             signature: signature,
@@ -123,14 +125,13 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver
         for (uint256 i = 0; i < params.order.parameters.consideration.length; i++) {
             totalConsideration = totalConsideration + params.order.parameters.consideration[i].startAmount;
         }
-        uint256 downPayment = totalConsideration - params.offer.loanPrincipalAmount;
-        uint256 totalRequiredFromPurchaser = downPayment + flashLoanInterest;
+        uint256 totalRequiredFromOperator = totalConsideration - params.offer.loanPrincipalAmount + flashLoanInterest;
         IERC20 considerationToken = IERC20(params.order.parameters.consideration[0].token);
-        require(considerationToken.balanceOf(params.purchaser) >= totalRequiredFromPurchaser, "Purchaser does not have sufficient consideration to make the down payment plus flash-loan fees");
-        require(considerationToken.allowance(params.purchaser, address(this)) >= totalRequiredFromPurchaser, "Purchaser has not approved sufficient ERC20 transfer to this contract to complete the purchase");
-        // 2) Take the down-payment plus flash-loan fee from the purchaser
-        if (!considerationToken.transferFrom(params.purchaser, address(this), totalRequiredFromPurchaser)) {
-            revert("Failed to transfer required funds from purchaser");
+        require(considerationToken.balanceOf(params.operator) >= totalRequiredFromOperator, "Operator does not have sufficient consideration to make the down payment plus flash-loan fees");
+        require(considerationToken.allowance(params.operator, address(this)) >= totalRequiredFromOperator, "Operator has not approved sufficient ERC20 transfer to this contract to complete the purchase");
+        // 2) Take the down-payment plus flash-loan fee from the operator
+        if (!considerationToken.transferFrom(params.operator, address(this), totalRequiredFromOperator)) {
+            revert("Failed to transfer required funds from operator");
         }
         // 3) Allow Seaport to transfer the required funds from this contract to complete the purchase
         if (!considerationToken.approve(address(SEAPORT), totalConsideration)) {
@@ -149,11 +150,11 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver
         );
         // 7) Mint the obligation receipt
         NFTFI_DIRECT_LOAN.mintObligationReceipt(loanId);
-        // 8) Transfer the obligation receipt to the purchaser
+        // 8) Transfer the obligation receipt to the receiver
         IDirectLoanCoordinator.Loan memory loan = NFTFI_DIRECT_LOAN_COORDINATOR.getLoanData(loanId);
         IERC721(NFTFI_DIRECT_LOAN_COORDINATOR.obligationReceiptToken()).transferFrom(
             address(this),
-            params.purchaser,
+            params.receiver,
             loan.smartNftId
         );
         // 8) Approve repayment of the flash loan

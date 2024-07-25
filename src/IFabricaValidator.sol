@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Validator smart contract interface for Fabrica
 
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.26;
 
 interface IFabricaValidator {
     function defaultOperatingAgreement() external view returns (string memory);
