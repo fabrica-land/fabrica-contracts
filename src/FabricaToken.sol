@@ -375,12 +375,15 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155, IERC1155Met
     }
 
     function _getValidatorName(uint256 tokenId) internal view returns (string memory) {
-        string memory validatorName = IFabricaValidatorRegistry(_validatorRegistry).name(_property[tokenId].validator);
-        if (bytes(validatorName).length > 0) {
-            return validatorName;
-        } else {
-            return "Custom";
+        if (_validatorRegistry != address(0)) {
+            string memory validatorName = IFabricaValidatorRegistry(_validatorRegistry).name(_property[tokenId].validator);
+            if (bytes(validatorName).length > 0) {
+                return validatorName;
+            } else {
+                return "Custom";
+            }
         }
+        return "Custom";
     }
 
     function _getOperatingAgreementName(uint256 tokenId) internal view returns (string memory) {
