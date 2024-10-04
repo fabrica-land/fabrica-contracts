@@ -646,14 +646,16 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155, IERC1155Met
         uint256 amount,
         bytes memory data
     ) private whenNotPaused {
-        try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
-            if (response != IERC1155Receiver.onERC1155Received.selector) {
-                revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
+        if (to.code.length > 0) {
+            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+                if (response != IERC1155Receiver.onERC1155Received.selector) {
+                    revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
+                }
+            } catch Error(string memory reason) {
+                revert(reason);
+            } catch {
+                revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
             }
-        } catch Error(string memory reason) {
-            revert(reason);
-        } catch {
-            revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
         }
     }
 
@@ -665,16 +667,18 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155, IERC1155Met
         uint256[] memory amounts,
         bytes memory data
     ) private whenNotPaused {
-        try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
-            bytes4 response
-        ) {
-            if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
-                revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
+        if (to.code.length > 0) {
+            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
+                bytes4 response
+            ) {
+                if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
+                    revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
+                }
+            } catch Error(string memory reason) {
+                revert(reason);
+            } catch {
+                revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
             }
-        } catch Error(string memory reason) {
-            revert(reason);
-        } catch {
-            revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
         }
     }
 }
