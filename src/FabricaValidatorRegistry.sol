@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.27;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
-import "./FabricaUUPSUpgradeable.sol";
-import "./IFabricaValidatorRegistry.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import {ContextUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import {FabricaUUPSUpgradeable} from "./FabricaUUPSUpgradeable.sol";
+import {IFabricaValidatorRegistry} from "./IFabricaValidatorRegistry.sol";
 
-contract FabricaValidatorRegistry is IFabricaValidatorRegistry, Initializable, IERC165Upgradeable, ERC165Upgradeable, OwnableUpgradeable, FabricaUUPSUpgradeable {
-    using AddressUpgradeable for address;
+contract FabricaValidatorRegistry is IFabricaValidatorRegistry, Initializable, IERC165, ERC165Upgradeable, OwnableUpgradeable, FabricaUUPSUpgradeable {
+    using Address for address;
 
     constructor() {
         _disableInitializers();
@@ -21,7 +22,7 @@ contract FabricaValidatorRegistry is IFabricaValidatorRegistry, Initializable, I
     function initialize() public initializer {
         __ERC165_init();
         __FabricaUUPSUpgradeable_init();
-        __Ownable_init();
+        __Ownable_init(_msgSender());
     }
 
     mapping(address => string) private _names;
@@ -31,7 +32,7 @@ contract FabricaValidatorRegistry is IFabricaValidatorRegistry, Initializable, I
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165Upgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 

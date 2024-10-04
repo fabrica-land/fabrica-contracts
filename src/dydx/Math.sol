@@ -16,9 +16,8 @@
 
 */
 
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.27;
 
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import { Require } from "./Require.sol";
 
 
@@ -29,8 +28,6 @@ import { Require } from "./Require.sol";
  * Library for non-standard Math functions
  */
 library Math {
-    using SafeMath for uint256;
-
     // ============ Constants ============
 
     bytes32 constant FILE = "Math";
@@ -49,7 +46,7 @@ library Math {
     pure
     returns (uint256)
     {
-        return target.mul(numerator).div(denominator);
+        return (target * numerator) / denominator;
     }
 
     /*
@@ -65,10 +62,9 @@ library Math {
     returns (uint256)
     {
         if (target == 0 || numerator == 0) {
-            // SafeMath will check for zero denominator
-            return SafeMath.div(0, denominator);
+            return 0 / denominator;
         }
-        return target.mul(numerator).sub(1).div(denominator).add(1);
+        return (((target * numerator) - 1) / denominator) + 1;
     }
 
     function to128(

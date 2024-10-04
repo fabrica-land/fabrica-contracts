@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.27;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC165, IERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
@@ -7,7 +7,6 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import {ERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
 import {Strings} from  "@openzeppelin/contracts/utils/Strings.sol";
 
 import {Account, Actions, ISoloMargin} from "../dydx/ISoloMargin.sol";
@@ -21,7 +20,7 @@ import {IDirectLoanCoordinator} from "./IDirectLoanCoordinator.sol";
 import {INftfiDirectLoanFixedOffer} from "./INftfiDirectLoanFixedOffer.sol";
 import {INftfiHub} from "./INftfiHub.sol";
 
-contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver, ERC1155Receiver, ICallee, DydxFlashloanBase {
+contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver, IERC1155Receiver, ICallee, DydxFlashloanBase {
 
     ISoloMargin public immutable DYDX_SOLO_MARGIN;
     INftfiDirectLoanFixedOffer public immutable NFTFI_DIRECT_LOAN;
@@ -162,11 +161,11 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver
         considerationToken.approve(address(DYDX_SOLO_MARGIN), flashLoanRepayment);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165, ERC1155Receiver) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
         return
             interfaceId == type(ICallee).interfaceId
             || interfaceId == type(IERC721Receiver).interfaceId
-            || ERC1155Receiver.supportsInterface(interfaceId);
+            || interfaceId == 0x4e2312e0; // ERC-1155 `ERC1155TokenReceiver` support (i.e. `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")) ^ bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`).
     }
 
     function onERC721Received(

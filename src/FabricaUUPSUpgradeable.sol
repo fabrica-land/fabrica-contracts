@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.27;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import {ERC1967Utils} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ContextUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 
 abstract contract FabricaUUPSUpgradeable is Initializable, ContextUpgradeable, UUPSUpgradeable {
     function __FabricaUUPSUpgradeable_init() internal onlyInitializing {
@@ -22,7 +23,7 @@ abstract contract FabricaUUPSUpgradeable is Initializable, ContextUpgradeable, U
     }
 
     function implementation() public view returns (address) {
-        return _getImplementation();
+        return ERC1967Utils.getImplementation();
     }
 
     /**
@@ -37,14 +38,14 @@ abstract contract FabricaUUPSUpgradeable is Initializable, ContextUpgradeable, U
      * @dev Throws if the sender is not the proxy admin.
      */
     function _checkProxyAdmin() internal view virtual {
-        require(_getAdmin() == _msgSender(), "FabricaUUPSUpgradeable: caller is not the proxy admin");
+        require(ERC1967Utils.getAdmin() == _msgSender(), "FabricaUUPSUpgradeable: caller is not the proxy admin");
     }
 
     /**
      * @dev Returns the current proxy admin address.
      */
     function proxyAdmin() public view returns (address) {
-        return ERC1967UpgradeUpgradeable._getAdmin();
+        return ERC1967Utils.getAdmin();
     }
 
     /**
@@ -52,6 +53,6 @@ abstract contract FabricaUUPSUpgradeable is Initializable, ContextUpgradeable, U
      */
     function setProxyAdmin(address _newProxyAdmin) public onlyProxyAdmin {
         // _setAdmin() doesn't emit the Upgraded event; _changeAdmin() does.
-        ERC1967UpgradeUpgradeable._changeAdmin(_newProxyAdmin);
+        ERC1967Utils.changeAdmin(_newProxyAdmin);
     }
 }

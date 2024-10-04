@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.27;
 
-import "@openzeppelin/contracts/access/Ownable2Step.sol";
-import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 
-import "./IPriceOracle.sol";
+import {IPriceOracle} from "./IPriceOracle.sol";
 
 /**
  * @title Simple Signed Price Oracle
  * @author MetaStreet Labs
  */
-contract SimpleSignedPriceOracle is Ownable2Step, EIP712, IPriceOracle {
+contract SimpleSignedPriceOracle is EIP712, Ownable2Step, IPriceOracle {
     /**************************************************************************/
     /* Constants */
     /**************************************************************************/
@@ -112,7 +114,7 @@ contract SimpleSignedPriceOracle is Ownable2Step, EIP712, IPriceOracle {
      * @notice Simple Signed Price Oracle constructor
      * @param name_ Domain separator name
      */
-    constructor(string memory name_) EIP712(name_, IMPLEMENTATION_VERSION()) {}
+    constructor(string memory name_) EIP712(name_, IMPLEMENTATION_VERSION()) Ownable(_msgSender()) {}
 
     /**************************************************************************/
     /* Internal Helpers */

@@ -1,13 +1,11 @@
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.27;
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "./ISoloMargin.sol";
+import {Account, Actions, ISoloMargin} from "./ISoloMargin.sol";
+import {Types} from "./ISoloMargin.sol";
 
 contract DydxFlashloanBase {
-    using SafeMath for uint256;
-
     // -- Internal Helper functions -- //
 
     function _getMarketIdFromTokenAddress(address _solo, address token)
@@ -38,7 +36,7 @@ contract DydxFlashloanBase {
     {
         // Needs to be overcollateralize
         // Needs to provide +2 wei to be safe
-        return amount.add(2);
+        return amount + 2;
     }
 
     function _getAccountInfo() internal view returns (Account.Info memory) {
@@ -52,20 +50,20 @@ contract DydxFlashloanBase {
     {
         return
             Actions.ActionArgs({
-            actionType: Actions.ActionType.Withdraw,
-            accountId: 0,
-            amount: Types.AssetAmount({
-            sign: false,
-            denomination: Types.AssetDenomination.Wei,
-            ref: Types.AssetReference.Delta,
-            value: amount
-        }),
-            primaryMarketId: marketId,
-            secondaryMarketId: 0,
-            otherAddress: address(this),
-            otherAccountId: 0,
-            data: ""
-        });
+              actionType: Actions.ActionType.Withdraw,
+              accountId: 0,
+              amount: Types.AssetAmount({
+                sign: false,
+                denomination: Types.AssetDenomination.Wei,
+                ref: Types.AssetReference.Delta,
+                value: amount
+              }),
+              primaryMarketId: marketId,
+              secondaryMarketId: 0,
+              otherAddress: address(this),
+              otherAccountId: 0,
+              data: ""
+            });
     }
 
     function _getCallAction(bytes memory data)
@@ -96,21 +94,20 @@ contract DydxFlashloanBase {
     view
     returns (Actions.ActionArgs memory)
     {
-        return
-            Actions.ActionArgs({
-            actionType: Actions.ActionType.Deposit,
-            accountId: 0,
-            amount: Types.AssetAmount({
+        return Actions.ActionArgs({
+          actionType: Actions.ActionType.Deposit,
+          accountId: 0,
+          amount: Types.AssetAmount({
             sign: true,
             denomination: Types.AssetDenomination.Wei,
             ref: Types.AssetReference.Delta,
             value: amount
-        }),
-            primaryMarketId: marketId,
-            secondaryMarketId: 0,
-            otherAddress: address(this),
-            otherAccountId: 0,
-            data: ""
+          }),
+          primaryMarketId: marketId,
+          secondaryMarketId: 0,
+          otherAddress: address(this),
+          otherAccountId: 0,
+          data: ""
         });
     }
 }

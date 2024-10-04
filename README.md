@@ -24,7 +24,7 @@
 ## Deploying Initial Contracts and Proxies
 1. `yarn && yarn rebuild`
 2. Copy and paste the files in folder `custom_flatten/` to Remix.
-3. Use compiler version `v0.8.26+commit.8a97fa7a` with optimization enabled and runs set to 1.
+3. Use compiler version `v0.8.27+commit.40a35a09` with optimization enabled and runs set to 1.
 4. Validator:
    1. Deploy the `FabricaValidator` contract and verify the source code on Etherscan (be sure to set optimize to true and runs to 1); copy address
    2. Deploy the `FabricaProxy` contract with these constructor arguments, and verify the source code on Etherscan (optimize, 1 run):

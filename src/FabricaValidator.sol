@@ -3,11 +3,12 @@
 
 pragma solidity ^0.8.21;
 
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "./FabricaUUPSUpgradeable.sol";
-import "./IFabricaValidator.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {FabricaUUPSUpgradeable} from "./FabricaUUPSUpgradeable.sol";
+import {IFabricaValidator} from "./IFabricaValidator.sol";
 
 /**
  * @dev Implementation of the Fabrica validator smart contract
@@ -15,14 +16,14 @@ import "./IFabricaValidator.sol";
  *      May add other fields in newer versions
  */
 contract FabricaValidator is IFabricaValidator, Initializable, FabricaUUPSUpgradeable, OwnableUpgradeable {
-    using AddressUpgradeable for address;
+    using Address for address;
 
     constructor() {
         _disableInitializers();
     }
 
     function initialize() public initializer {
-        __Ownable_init();
+        __Ownable_init(_msgSender());
         __UUPSUpgradeable_init();
     }
 

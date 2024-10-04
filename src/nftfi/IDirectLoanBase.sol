@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.27;
 
-import "./LoanData.sol";
+import {LoanData} from "./LoanData.sol";
 
 interface IDirectLoanBase {
     function hub() external view returns (address);

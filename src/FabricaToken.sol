@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.27;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165CheckerUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "./FabricaUUPSUpgradeable.sol";
-import "./IFabricaValidator.sol";
-import "./IFabricaValidatorRegistry.sol";
+import {IERC1155, IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import {IERC1155MetadataURI} from "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import {ERC165Upgradeable} from "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import {FabricaUUPSUpgradeable} from "./FabricaUUPSUpgradeable.sol";
+import {IFabricaValidator} from "./IFabricaValidator.sol";
+import {IFabricaValidatorRegistry} from "./IFabricaValidatorRegistry.sol";
 
 /**
  * @dev Implementation of the Fabrica ERC1155 multi-token.
@@ -21,8 +24,8 @@ import "./IFabricaValidatorRegistry.sol";
  *
  * _Available since v3.1._
  */
-contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, IERC1155MetadataURIUpgradeable, OwnableUpgradeable, PausableUpgradeable, FabricaUUPSUpgradeable {
-    using AddressUpgradeable for address;
+contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155, IERC1155MetadataURI, OwnableUpgradeable, PausableUpgradeable, FabricaUUPSUpgradeable {
+    using Address for address;
 
     constructor() {
         _disableInitializers();
@@ -31,7 +34,7 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, 
     function initialize() public initializer {
         __ERC165_init();
         __FabricaUUPSUpgradeable_init();
-        __Ownable_init();
+        __Ownable_init(_msgSender());
         __Pausable_init();
     }
 
@@ -78,10 +81,10 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, 
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165Upgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165Upgradeable, IERC165) returns (bool) {
         return
-            interfaceId == type(IERC1155Upgradeable).interfaceId ||
-            interfaceId == type(IERC1155MetadataURIUpgradeable).interfaceId ||
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC1155MetadataURI).interfaceId ||
             // 0xaf332f3e is ERC-7496
             interfaceId == 0xaf332f3e ||
             super.supportsInterface(interfaceId);
@@ -135,7 +138,7 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, 
               values[i] = bytes32(bytes(_getOperatingAgreementName(tokenId)));
               continue;
           }
-          revert(string.concat("Unknown trait key at index ", StringsUpgradeable.toString(i)));
+          revert(string.concat("Unknown trait key at index ", Strings.toString(i)));
         }
         return values;
     }
@@ -250,12 +253,12 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, 
          * @dev hash operator address with sessionId and chainId to generate unique token Id
          *      format: string(sender_address) + string(sessionId) => hash to byte32 => cast to uint
          */
-        string memory operatorString = StringsUpgradeable.toHexString(uint(uint160(operator)), 20);
+        string memory operatorString = Strings.toHexString(uint(uint160(operator)), 20);
         string memory idString = string.concat(
-            StringsUpgradeable.toString(block.chainid),
-            StringsUpgradeable.toHexString(address(this)),
+            Strings.toString(block.chainid),
+            Strings.toHexString(address(this)),
             operatorString,
-            StringsUpgradeable.toString(sessionId),
+            Strings.toString(sessionId),
             operatingAgreement
         );
         uint256 bigId = uint256(keccak256(abi.encodePacked(idString)));
@@ -395,7 +398,7 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, 
         if (supply == 0) {
             return false;
         }
-        uint256 percent = MathUpgradeable.mulDiv(shares, 100, supply);
+        uint256 percent = Math.mulDiv(shares, 100, supply);
         return percent > threshold;
     }
 
@@ -643,16 +646,14 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, 
         uint256 amount,
         bytes memory data
     ) private whenNotPaused {
-        if (to.isContract()) {
-            try IERC1155ReceiverUpgradeable(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
-                if (response != IERC1155ReceiverUpgradeable.onERC1155Received.selector) {
-                    revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
-                }
-            } catch Error(string memory reason) {
-                revert(reason);
-            } catch {
-                revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
+        try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+            if (response != IERC1155Receiver.onERC1155Received.selector) {
+                revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
             }
+        } catch Error(string memory reason) {
+            revert(reason);
+        } catch {
+            revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
         }
     }
 
@@ -664,18 +665,16 @@ contract FabricaToken is Initializable, ERC165Upgradeable, IERC1155Upgradeable, 
         uint256[] memory amounts,
         bytes memory data
     ) private whenNotPaused {
-        if (to.isContract()) {
-            try IERC1155ReceiverUpgradeable(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
-                bytes4 response
-            ) {
-                if (response != IERC1155ReceiverUpgradeable.onERC1155BatchReceived.selector) {
-                    revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
-                }
-            } catch Error(string memory reason) {
-                revert(reason);
-            } catch {
-                revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
+        try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
+            bytes4 response
+        ) {
+            if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
+                revert("ERC1155: ERC1155ReceiverUpgradeable rejected tokens");
             }
+        } catch Error(string memory reason) {
+            revert(reason);
+        } catch {
+            revert("ERC1155: transfer to non-ERC1155ReceiverUpgradeable implementer");
         }
     }
 }
