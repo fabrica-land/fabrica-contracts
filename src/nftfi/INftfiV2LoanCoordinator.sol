@@ -6,7 +6,7 @@ pragma solidity ^0.8.28;
  * @author NFTfi
  * @dev DirectLoanCoordinator interface.
  */
-interface IDirectLoanCoordinator {
+interface INftfiV2LoanCoordinator {
     enum StatusType {
         NOT_EXISTS,
         NEW,
@@ -33,6 +33,8 @@ interface IDirectLoanCoordinator {
 
     function mintObligationReceipt(uint32 _loanId, address _borrower) external;
 
+    function mintPromissoryNote(uint32 _loanId, address _lender) external;
+
     function resolveLoan(uint32 _loanId, bool liquidated) external;
 
     function promissoryNoteToken() external view returns (address);
@@ -42,4 +44,12 @@ interface IDirectLoanCoordinator {
     function getLoanData(uint32 _loanId) external view returns (Loan memory);
 
     function isValidLoanId(uint32 _loanId, address _loanContract) external view returns (bool);
+
+    function getDefaultLoanContractForOfferType(bytes32 _offerType) external view returns (address);
+
+    function getTypeOfLoanContract(address _loanContract) external view returns (bytes32);
+
+    function checkNonce(address _user, uint256 _nonce) external view;
+
+    function checkAndInvalidateNonce(address _user, uint256 _nonce) external;
 }

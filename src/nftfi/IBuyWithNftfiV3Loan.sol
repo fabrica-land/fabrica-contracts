@@ -3,9 +3,9 @@ pragma solidity ^0.8.28;
 
 import {Order} from "../seaport/ConsiderationStructs.sol";
 
-import {INftfiDirectLoanFixedOffer} from "./INftfiDirectLoanFixedOffer.sol";
+import {INftfiV3LoanOffer} from "./INftfiV3LoanOffer.sol";
 
-interface IBuyWithNftfiLoan {
+interface IBuyWithNftfiV3Loan {
 
     function calculateFlashLoanInterest(
         uint256 loanPrincipalAmount
@@ -14,8 +14,7 @@ interface IBuyWithNftfiLoan {
     function buyWithLoan(
         address receiver,
         Order calldata order,
-        INftfiDirectLoanFixedOffer.Offer calldata offer,
-        INftfiDirectLoanFixedOffer.Signature calldata signature,
-        INftfiDirectLoanFixedOffer.BorrowerSettings calldata borrowerSettings
+        INftfiV3LoanOffer.Offer calldata offer,
+        INftfiV3LoanOffer.Signature calldata signature
     ) external;
 }
