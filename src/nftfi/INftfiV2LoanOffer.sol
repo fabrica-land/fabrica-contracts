@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {IDirectLoanBase} from "./IDirectLoanBase.sol";
+import {INftfiV2LoanBase} from "./INftfiV2LoanBase.sol";
 
-interface INftfiDirectLoanFixedOffer is IDirectLoanBase {
+interface INftfiV2LoanOffer is INftfiV2LoanBase {
 
     struct Offer {
         uint256 loanPrincipalAmount;

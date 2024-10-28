@@ -15,16 +15,16 @@ import {ICallee} from "../dydx/ICallee.sol";
 import {ConsiderationInterface} from "../seaport/ConsiderationInterface.sol";
 import {Order} from "../seaport/ConsiderationStructs.sol";
 
-import {IBuyWithNftfiLoan} from "./IBuyWithNftfiLoan.sol";
-import {IDirectLoanCoordinator} from "./IDirectLoanCoordinator.sol";
-import {INftfiDirectLoanFixedOffer} from "./INftfiDirectLoanFixedOffer.sol";
+import {IBuyWithNftfiV2Loan} from "./IBuyWithNftfiV2Loan.sol";
+import {INftfiV2LoanCoordinator} from "./INftfiV2LoanCoordinator.sol";
+import {INftfiV2LoanOffer} from "./INftfiV2LoanOffer.sol";
 import {INftfiHub} from "./INftfiHub.sol";
 
-contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver, IERC1155Receiver, ICallee, DydxFlashloanBase {
+contract BuyWithNftfiV2Loan is IBuyWithNftfiV2Loan, IERC165, ERC165, IERC721Receiver, IERC1155Receiver, ICallee, DydxFlashloanBase {
 
     ISoloMargin public immutable DYDX_SOLO_MARGIN;
-    INftfiDirectLoanFixedOffer public immutable NFTFI_DIRECT_LOAN;
-    IDirectLoanCoordinator public immutable NFTFI_DIRECT_LOAN_COORDINATOR;
+    INftfiV2LoanOffer public immutable NFTFI_DIRECT_LOAN;
+    INftfiV2LoanCoordinator public immutable NFTFI_DIRECT_LOAN_COORDINATOR;
     ConsiderationInterface public immutable SEAPORT;
 
     mapping(address => bool) public tokenFlashloanable;
@@ -34,9 +34,9 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver
         address operator;
         address receiver;
         Order order;
-        INftfiDirectLoanFixedOffer.Offer offer;
-        INftfiDirectLoanFixedOffer.Signature signature;
-        INftfiDirectLoanFixedOffer.BorrowerSettings borrowerSettings;
+        INftfiV2LoanOffer.Offer offer;
+        INftfiV2LoanOffer.Signature signature;
+        INftfiV2LoanOffer.BorrowerSettings borrowerSettings;
     }
 
     constructor(
@@ -45,9 +45,9 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver
         address seaportAddress
     ) {
         DYDX_SOLO_MARGIN = ISoloMargin(dydxSoloMarginAddress);
-        NFTFI_DIRECT_LOAN = INftfiDirectLoanFixedOffer(nftfiLoanAddress);
+        NFTFI_DIRECT_LOAN = INftfiV2LoanOffer(nftfiLoanAddress);
         INftfiHub nftfiHub = INftfiHub(NFTFI_DIRECT_LOAN.hub());
-        NFTFI_DIRECT_LOAN_COORDINATOR = IDirectLoanCoordinator(nftfiHub.getContract(NFTFI_DIRECT_LOAN.LOAN_COORDINATOR()));
+        NFTFI_DIRECT_LOAN_COORDINATOR = INftfiV2LoanCoordinator(nftfiHub.getContract(NFTFI_DIRECT_LOAN.LOAN_COORDINATOR()));
         SEAPORT = ConsiderationInterface(seaportAddress);
         for (uint256 i; i <= 3; ++i) {
             address tokenAddress = DYDX_SOLO_MARGIN.getMarketTokenAddress(i);
@@ -66,9 +66,9 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver
     function buyWithLoan(
         address receiver,
         Order calldata order,
-        INftfiDirectLoanFixedOffer.Offer calldata offer,
-        INftfiDirectLoanFixedOffer.Signature calldata signature,
-        INftfiDirectLoanFixedOffer.BorrowerSettings calldata borrowerSettings
+        INftfiV2LoanOffer.Offer calldata offer,
+        INftfiV2LoanOffer.Signature calldata signature,
+        INftfiV2LoanOffer.BorrowerSettings calldata borrowerSettings
     ) external override {
         require(order.parameters.offer.length == 1, "Only single-token orders are supported by this contract");
         require(tokenFlashloanable[order.parameters.consideration[0].token], "Consideration token not supported by flash-loan provider");
@@ -150,7 +150,7 @@ contract BuyWithNftfiLoan is IBuyWithNftfiLoan, IERC165, ERC165, IERC721Receiver
         // 7) Mint the obligation receipt
         NFTFI_DIRECT_LOAN.mintObligationReceipt(loanId);
         // 8) Transfer the obligation receipt to the receiver
-        IDirectLoanCoordinator.Loan memory loan = NFTFI_DIRECT_LOAN_COORDINATOR.getLoanData(loanId);
+        INftfiV2LoanCoordinator.Loan memory loan = NFTFI_DIRECT_LOAN_COORDINATOR.getLoanData(loanId);
         IERC721(NFTFI_DIRECT_LOAN_COORDINATOR.obligationReceiptToken()).transferFrom(
             address(this),
             params.receiver,

@@ -6,7 +6,7 @@ pragma solidity ^0.8.28;
  * @author NFTfi
  * @notice An interface containing the main Loan struct shared by Direct Loans types.
  */
-interface LoanData {
+interface NftfiV2LoanData {
     /* ********** */
     /* DATA TYPES */
     /* ********** */

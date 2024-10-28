@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.28;
 
-import {LoanData} from "./LoanData.sol";
+import {NftfiV2LoanData} from "./NftfiV2LoanData.sol";
 
-interface IDirectLoanBase {
+interface INftfiV2LoanBase {
     function hub() external view returns (address);
 
     function maximumLoanDuration() external view returns (uint256);
