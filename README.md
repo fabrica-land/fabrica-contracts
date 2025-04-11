@@ -4,7 +4,7 @@
 
 ### Ethereum Mainnet Contracts
 - 1155 Token Proxy: [0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95](https://etherscan.io/token/0x5cbeb7a0df7ed85d82a472fd56d81ed550f3ea95#readProxyContract)
-- 1155 Token Implementation: `0xd1336777Df7c9cA43842F91EEcf74bD4BE70c477`
+- 1155 Token Implementation: `0x7c26B9e463554b2FD348eafAB33A5928Fdba3a73`
 - Validator Proxy: [0x170511f95560A1F280c29026f73a9cD6a4bA8ab0](https://etherscan.io/address/0x170511f95560A1F280c29026f73a9cD6a4bA8ab0#readProxyContract)
 - Validator Implementation: `0x33F1b76603DBf84b2717f17A4ea0CCb2c94fFbF0`
 - Validator Registry Proxy: [0xB5dE693F6fa91D25EFa61BA740F0B4766a8DA6E5](https://sepolia.etherscan.io/token/0xB5dE693F6fa91D25EFa61BA740F0B4766a8DA6E5#readProxyContract)
@@ -12,7 +12,7 @@
 
 ### Sepolia Contracts
 - 1155 Token Proxy: [0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD](https://sepolia.etherscan.io/token/0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD#readProxyContract)
-- 1155 Token Implementation: `0xBb865345aAb0D2d6Eb93dfE5D4c0a3930c36140B`
+- 1155 Token Implementation: `0x719542E4422d1F896d6d1Cca358FD31F8153106c`
 - Validator Proxy: [0xAAA7FDc1A573965a2eD47Ab154332b6b55098008](https://sepolia.etherscan.io/address/0xAAA7FDc1A573965a2eD47Ab154332b6b55098008#readProxyContract)
 - Validator Implementation: `0xea409961530b6dfb4b82debad0ba99271bc350d7`
 - Validator Registry Proxy: [0xb54392209537606F30bC056f3D83d0771A69c9ba](https://sepolia.etherscan.io/token/0xb54392209537606F30bC056f3D83d0771A69c9ba#readProxyContract)
@@ -93,6 +93,7 @@ Make sure:
 ### Previous Mainnet Contracts
 - 1155 Token Proxy: [0xd8A38b46D8cF9813c7c9233B844DD0eC7D7e8750](https://etherscan.io/token/0xd8a38b46d8cf9813c7c9233b844dd0ec7d7e8750#readProxyContract)
 - 1155 Token Implementations:
+  - `0xd1336777Df7c9cA43842F91EEcf74bD4BE70c477`
   - `0x8E9d55A4cA3EdF7Bf3263F746AF404A2c985EdF7`
   - `0x58fe23aeb6e7768457fbc1c89f303835a9de2956`
   - `0x43c6eE9D5B2369C5484f69E2Eb3361466855beDd`
@@ -105,10 +106,11 @@ Make sure:
 ### Previous Sepolia Contracts
 - 1155 Token Proxy: https://sepolia.etherscan.io/token/0x13364c9D131dC2e0C83Be9D2fD3edb6627536544#code
 - 1155 Token Implementations:
-    - `0x62AB1aA5dE5a824969Fa954e57E1655896F48b86`
-    - `0x07e5bd197335c0d452e74c67733402b741a74bd1`
-    - `0x43c6eE9D5B2369C5484f69E2Eb3361466855beDd`
-    - `0x349558BBb0dC364Ef7E2006E1BaFd8f705b42fEC`
+  - `0xBb865345aAb0D2d6Eb93dfE5D4c0a3930c36140B`
+  - `0x62AB1aA5dE5a824969Fa954e57E1655896F48b86`
+  - `0x07e5bd197335c0d452e74c67733402b741a74bd1`
+  - `0x43c6eE9D5B2369C5484f69E2Eb3361466855beDd`
+  - `0x349558BBb0dC364Ef7E2006E1BaFd8f705b42fEC`
 - Validator Proxy: https://sepolia.etherscan.io/address/0x0BC24a5c475232F9d2501fFc52C3685741d6F517#code
 - Validator Implementations:
     - `0xa991DDB60c5a17f1F022c587c30e65d70a8558cc`
