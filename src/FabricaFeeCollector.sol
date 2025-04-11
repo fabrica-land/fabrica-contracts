@@ -33,6 +33,15 @@ contract FabricaFeeCollector is Initializable, OwnableUpgradeable, PausableUpgra
         uint256 validatorReceived
     );
 
+    error InsufficientAllowance(
+        uint256 approval,
+        uint256 feeAmount
+    );
+    error InsufficientBalance(
+        uint256 balance,
+        uint256 feeAmount
+    );
+
     constructor() {
         _disableInitializers();
     }
@@ -92,8 +101,14 @@ contract FabricaFeeCollector is Initializable, OwnableUpgradeable, PausableUpgra
         uint256 amount
     ) external onlyOwner whenNotPaused {
         IERC20 currency = IERC20(erc20CurrencyAddress);
-        assert(currency.allowance(obligor, address(this)) >= amount);
-        assert(currency.balanceOf(obligor) >= amount);
+        uint256 allowance = currency.allowance(obligor, address(this));
+        if (allowance < amount) {
+            revert InsufficientAllowance(allowance, amount);
+        }
+        uint256 balance = currency.balanceOf(obligor);
+        if (balance < amount) {
+            revert InsufficientBalance(balance, amount);
+        }
         currency.transferFrom(obligor, address(this), amount);
         IFabricaToken protocolContract = IFabricaToken(_protocolContractAddress);
         (,,,,address validatorAddress) = protocolContract._property(tokenId);

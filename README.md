@@ -18,7 +18,7 @@
 - Validator Registry Proxy: [0xb54392209537606F30bC056f3D83d0771A69c9ba](https://sepolia.etherscan.io/token/0xb54392209537606F30bC056f3D83d0771A69c9ba#readProxyContract)
 - Validator Registry Implementation: `0xc60657bdd358b95be80266f3b7be15dc856a41b9`
 - Fee Collection Proxy: [0x24888646723ae14C83E5354431753675A3d12D3c](https://sepolia.etherscan.io/address/0x24888646723ae14c83e5354431753675a3d12d3c#readProxyContract)
-- Fee Collection Implementation: `0xf58d5602212273914FD25da6706C037Eb34CE97e`
+- Fee Collection Implementation: `0xc6e6dabd25f3ed98ceb98da26a934e269b62fd58`
 
 ### Base-Sepolia Contracts
 - 1155 Token Proxy: [0xCE53C17A82bd67aD835d3e2ADBD3e062058B8F81](https://sepolia.basescan.org/address/0xCE53C17A82bd67aD835d3e2ADBD3e062058B8F81#readProxyContract)
@@ -28,7 +28,7 @@
 - Validator Registry Proxy: [0xF9C41f9FC2b44645A6788ED95E433BD5e96a2e24](https://sepolia.basescan.org/address/0xF9C41f9FC2b44645A6788ED95E433BD5e96a2e24#readProxyContract)
 - Validator Registry Implementation: `0xa24dc4f04d1ac9b41df0f7c2c772a9c0192d9c3b`
 - Fee Collection Proxy: [0xa991DDB60c5a17f1F022c587c30e65d70a8558cc]()
-- Fee Collection Implementation: `0x0BC24a5c475232F9d2501fFc52C3685741d6F517`
+- Fee Collection Implementation: `0x62AB1aA5dE5a824969Fa954e57E1655896F48b86`
 
 ### Common
 - Null address: `0x0000000000000000000000000000000000000000`
