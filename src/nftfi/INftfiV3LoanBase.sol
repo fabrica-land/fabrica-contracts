@@ -18,4 +18,8 @@ interface INftfiV3LoanBase {
     function loanRepaidOrLiquidated(uint32) external view returns (bool);
 
     function getWhetherRenegotiationNonceHasBeenUsedForUser(address _user, uint256 _nonce) external view returns (bool);
+
+    function getPayoffAmount(uint32 _loanId) external view returns (uint256);
+
+    function payBackLoan(uint32 _loanId) external;
 }
