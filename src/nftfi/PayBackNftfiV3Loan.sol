@@ -7,22 +7,20 @@ import {INftfiV3LoanBase} from "./INftfiV3LoanBase.sol";
 contract PayBackNftfiV3Loan {
 
     INftfiV3LoanBase public immutable nftfiV3LoanContract;
-    address public immutable nftfiV3Erc20TransferManagerAddress;
     IERC20 public immutable usdcContract;
 
     constructor(
         address nftfiV3LoanContractAddress,
-        address nftfiV3Erc20TransferManagerAddress_,
         address usdcContractAddress
     ) {
         nftfiV3LoanContract = INftfiV3LoanBase(nftfiV3LoanContractAddress);
-        nftfiV3LoanContractAddress = nftfiV3Erc20TransferManagerAddress_;
         usdcContract = IERC20(usdcContractAddress);
     }
 
     function payBackLoan(uint32 loanId) external {
         uint256 paybackAmount = nftfiV3LoanContract.getPayoffAmount(loanId);
         usdcContract.transferFrom(msg.sender, address(this), paybackAmount);
+        address nftfiV3Erc20TransferManagerAddress = nftfiV3LoanContract.getERC20TransferManagerAddress();
         usdcContract.approve(nftfiV3Erc20TransferManagerAddress, paybackAmount);
         nftfiV3LoanContract.payBackLoan(loanId);
     }

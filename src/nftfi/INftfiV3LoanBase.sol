@@ -22,4 +22,6 @@ interface INftfiV3LoanBase {
     function getPayoffAmount(uint32 _loanId) external view returns (uint256);
 
     function payBackLoan(uint32 _loanId) external;
+
+    function getERC20TransferManagerAddress() external view returns (address);
 }
