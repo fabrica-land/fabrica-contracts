@@ -16,7 +16,7 @@ contract PayBackNftfiV3Loan {
         address usdcContractAddress
     ) {
         nftfiV3LoanContract = INftfiV3LoanBase(nftfiV3LoanContractAddress);
-        nftfiV3LoanContractAddress = nftfiV3Erc20TransferManagerAddress_;
+        nftfiV3Erc20TransferManagerAddress = nftfiV3Erc20TransferManagerAddress_;
         usdcContract = IERC20(usdcContractAddress);
     }
 
