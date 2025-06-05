@@ -9,6 +9,7 @@
 - Validator Implementation: `0x33F1b76603DBf84b2717f17A4ea0CCb2c94fFbF0`
 - Validator Registry Proxy: [0xB5dE693F6fa91D25EFa61BA740F0B4766a8DA6E5](https://sepolia.etherscan.io/token/0xB5dE693F6fa91D25EFa61BA740F0B4766a8DA6E5#readProxyContract)
 - Validator Registry Implementation: `0xBeC03A6C37D985C86F0e6A91ACbdD487B45B259b`
+- NFTfi v3 Loan Pay-Back:
 
 ### Sepolia Contracts
 - 1155 Token Proxy: [0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD](https://sepolia.etherscan.io/token/0xb52ED2Dc8EBD49877De57De3f454Fd71b75bc1fD#readProxyContract)
@@ -19,6 +20,7 @@
 - Validator Registry Implementation: `0xc60657bdd358b95be80266f3b7be15dc856a41b9`
 - Fee Collection Proxy: [0x24888646723ae14C83E5354431753675A3d12D3c](https://sepolia.etherscan.io/address/0x24888646723ae14c83e5354431753675a3d12d3c#readProxyContract)
 - Fee Collection Implementation: `0xc6e6dabd25f3ed98ceb98da26a934e269b62fd58`
+- NFTfi v3 Loan Pay-Back: [0x925f2BD542cEc764f4444C890c20048C8E99092B](https://sepolia.etherscan.io/address/0x925f2BD542cEc764f4444C890c20048C8E99092B#writeContract)
 
 ### Base-Sepolia Contracts
 - 1155 Token Proxy: [0xCE53C17A82bd67aD835d3e2ADBD3e062058B8F81](https://sepolia.basescan.org/address/0xCE53C17A82bd67aD835d3e2ADBD3e062058B8F81#readProxyContract)
@@ -29,6 +31,7 @@
 - Validator Registry Implementation: `0xa24dc4f04d1ac9b41df0f7c2c772a9c0192d9c3b`
 - Fee Collection Proxy: [0xa991DDB60c5a17f1F022c587c30e65d70a8558cc]()
 - Fee Collection Implementation: `0x62AB1aA5dE5a824969Fa954e57E1655896F48b86`
+- NFTfi v3 Loan Pay-Back: [0xaa89b922f9f416af44a2bb98cab8c7024f764e90](https://sepolia.basescan.org/address/0xaa89b922f9f416af44a2bb98cab8c7024f764e90#writeContract)
 
 ### Common
 - Null address: `0x0000000000000000000000000000000000000000`
