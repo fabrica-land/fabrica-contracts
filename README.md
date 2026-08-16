@@ -145,3 +145,8 @@ Make sure:
 - Validator Proxy: [0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F](https://goerli.etherscan.io/address/0xFF9dAe0F64382e9dDc0918A7704eF4777A7e0D6F#readProxyContract)
 - Validator Implementation: `0xeB894D4404e159365173174F3aec5b8B654783D1`
 - Test token ID: `11043966458603065864`
+
+## License
+
+Fabrica-authored code in this repository is licensed under the [MIT License](LICENSE).
+Vendored third-party files retain their original licenses; see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
