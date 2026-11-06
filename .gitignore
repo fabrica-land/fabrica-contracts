@@ -68,7 +68,7 @@ typings/
 
 # IDE settings
 .idea
-# ENG-5623: no backup copies or local secret files at any depth. Git history and sops are the backup.
+# No backup copies or local secret files at any depth. Git history and sops are the backup.
 **/*.bak*
 **/*.before*
 **/*.override
